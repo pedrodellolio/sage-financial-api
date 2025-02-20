@@ -1,15 +1,16 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace SageFinancialAPI.Entities
 {
-    public class Profile : BaseEntity
+    public class Profile : BaseEntity, IUserOwnedEntity
     {
         public string Title { get; set; } = string.Empty;
         public bool IsActive { get; set; }
-        public Guid UserId { get; set; }
-        public User User { get; set; } = null!;
         public ICollection<Wallet> Wallets { get; set; } = [];
         public ICollection<Label> Labels { get; set; } = [];
         public ICollection<Budget> Budgets { get; set; } = [];
         public ICollection<File> Files { get; set; } = [];
-
+        public Guid UserId { get; set; }
+        public User User { get; set; } = null!;
     }
 }

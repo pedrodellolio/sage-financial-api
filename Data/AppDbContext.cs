@@ -6,13 +6,13 @@ namespace SageFinancialAPI.Data
     public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
     {
         public DbSet<User> Users { get; set; }
-        public DbSet<Profile> Profile { get; set; }
-        public DbSet<Wallet> Wallet { get; set; }
+        public DbSet<Profile> Profiles { get; set; }
+        public DbSet<Wallet> Wallets { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Label> Labels { get; set; }
         public DbSet<Entities.File> Files { get; set; }
-        public DbSet<Budget> Budget { get; set; }
-        public DbSet<BudgetGoal> BudgetGoal { get; set; }
+        public DbSet<Budget> Budgets { get; set; }
+        public DbSet<BudgetGoal> BudgetGoals { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -72,6 +72,11 @@ namespace SageFinancialAPI.Data
                 .HasOne(bg => bg.Label)
                 .WithMany(l => l.BudgetGoals)
                 .HasForeignKey(bg => bg.LabelId);
+
+            // Index único UserId + Título
+            modelBuilder.Entity<Profile>()
+                    .HasIndex(p => new { p.UserId, p.Title })
+                    .IsUnique();
 
             base.OnModelCreating(modelBuilder);
         }

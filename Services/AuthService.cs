@@ -68,7 +68,7 @@ namespace SageFinancialAPI.Services
                 issuer: configuration.GetValue<string>("AppSettings:Issuer"),
                 audience: configuration.GetValue<string>("AppSettings:Audience"),
                 claims: claims,
-                expires: DateTime.UtcNow.AddSeconds(10),
+                expires: DateTime.UtcNow.AddHours(1),
                 signingCredentials: credentials
             );
 
