@@ -1,22 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using SageFinancialAPI.Entities;
+using Microsoft.AspNetCore.Authorization;
 using SageFinancialAPI.Models;
 using SageFinancialAPI.Services;
-using Microsoft.AspNetCore.Authorization;
 
 namespace SageFinancialAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class ProfileController(IProfileService profileService) : BaseController
+    public class WalletController(IWalletService walletService) : BaseController
     {
-        [HttpGet("{profileId}")]
-        public async Task<ActionResult<Profile?>> Get(Guid profileId)
+        [HttpGet("{walletId}")]
+        public async Task<ActionResult<Wallet?>> Get(Guid walletId)
         {
             try
             {
-                var result = await profileService.GetAsync(profileId);
+                var result = await walletService.GetAsync(walletId);
                 return Ok(result);
             }
             catch (ApplicationException ex)
@@ -30,11 +30,11 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpGet("all")]
-        public async Task<ActionResult<ICollection<Profile>>> GetAll()
+        public async Task<ActionResult<ICollection<Wallet>>> GetAll()
         {
             try
             {
-                var result = await profileService.GetAllAsync(UserId);
+                var result = await walletService.GetAllAsync(ProfileId);
                 return Ok(result);
             }
             catch (ApplicationException ex)
@@ -48,16 +48,16 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Profile>> Post(ProfileDto request)
+        public async Task<ActionResult<Wallet>> Post(WalletDto request)
         {
             try
             {
-                var profileDb = await profileService.GetByTitleAsync(request.Title);
-                if (profileDb is not null)
-                    return Conflict("Já existe uma Profile com esse título.");
+                var walletDb = await walletService.GetByMonthAndYearAsync(request.Month, request.Year, ProfileId);
+                if (walletDb is not null)
+                    return Conflict("Já existe uma Wallet com esse título.");
 
-                Profile profile = await profileService.PostAsync(request, UserId);
-                return Ok(profile);
+                Wallet wallet = await walletService.PostAsync(request.Month, request.Year, ProfileId);
+                return Ok(wallet);
             }
             catch (ApplicationException ex)
             {
@@ -70,16 +70,19 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<Profile>> Put(ProfileUpdateDto request)
+        public async Task<ActionResult<Wallet>> Put(WalletUpdateDto request)
         {
             try
             {
-                var profileDb = await profileService.GetAsync(request.Id);
-                if (profileDb is null)
-                    return NotFound("Profile não encontrada.");
+                var walletDb = await walletService.GetAsync(request.Id);
+                if (walletDb is null)
+                    return NotFound("Wallet não encontrada.");
 
-                var profile = await profileService.PutAsync(profileDb);
-                return Ok(profile);
+                walletDb.ExpensesBrl = request.ExpensesBrl;
+                walletDb.IncomesBrl = request.IncomesBrl;
+
+                var wallet = await walletService.PutAsync(walletDb);
+                return Ok(wallet);
             }
             catch (ApplicationException ex)
             {
@@ -91,16 +94,16 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
-        [HttpDelete("{profileId}")]
-        public async Task<ActionResult<bool>> Delete(Guid profileId)
+        [HttpDelete("{walletId}")]
+        public async Task<ActionResult<bool>> Delete(Guid walletId)
         {
             try
             {
-                var profileDb = await profileService.GetAsync(profileId);
-                if (profileDb is null)
-                    return NotFound("Profile não encontrada.");
+                var walletDb = await walletService.GetAsync(walletId);
+                if (walletDb is null)
+                    return NotFound("Wallet não encontrada.");
 
-                var deleted = await profileService.DeleteAsync(profileDb);
+                var deleted = await walletService.DeleteAsync(walletDb);
                 return Ok(deleted);
             }
             catch (ApplicationException ex)

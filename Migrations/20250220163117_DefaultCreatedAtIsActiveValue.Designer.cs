@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SageFinancialAPI.Data;
@@ -11,9 +12,11 @@ using SageFinancialAPI.Data;
 namespace SageFinancialAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250220163117_DefaultCreatedAtIsActiveValue")]
+    partial class DefaultCreatedAtIsActiveValue
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -265,17 +268,12 @@ namespace SageFinancialAPI.Migrations
                     b.Property<Guid>("ProfileId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
                     b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProfileId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Wallets");
                 });
@@ -385,10 +383,6 @@ namespace SageFinancialAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("SageFinancialAPI.Entities.User", null)
-                        .WithMany("Wallets")
-                        .HasForeignKey("UserId");
-
                     b.Navigation("Profile");
                 });
 
@@ -421,8 +415,6 @@ namespace SageFinancialAPI.Migrations
             modelBuilder.Entity("SageFinancialAPI.Entities.User", b =>
                 {
                     b.Navigation("Profiles");
-
-                    b.Navigation("Wallets");
                 });
 
             modelBuilder.Entity("SageFinancialAPI.Entities.Wallet", b =>

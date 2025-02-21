@@ -1,22 +1,23 @@
 using Microsoft.AspNetCore.Mvc;
 using SageFinancialAPI.Entities;
+using Microsoft.AspNetCore.Authorization;
 using SageFinancialAPI.Models;
 using SageFinancialAPI.Services;
-using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace SageFinancialAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class ProfileController(IProfileService profileService) : BaseController
+    public class TransactionController(ITransactionService transactionService) : BaseController
     {
-        [HttpGet("{profileId}")]
-        public async Task<ActionResult<Profile?>> Get(Guid profileId)
+        [HttpGet("{transactionId}")]
+        public async Task<ActionResult<Transaction?>> Get(Guid transactionId)
         {
             try
             {
-                var result = await profileService.GetAsync(profileId);
+                var result = await transactionService.GetAsync(transactionId);
                 return Ok(result);
             }
             catch (ApplicationException ex)
@@ -30,11 +31,11 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpGet("all")]
-        public async Task<ActionResult<ICollection<Profile>>> GetAll()
+        public async Task<ActionResult<ICollection<Transaction>>> GetAll()
         {
             try
             {
-                var result = await profileService.GetAllAsync(UserId);
+                var result = await transactionService.GetAllAsync(ProfileId);
                 return Ok(result);
             }
             catch (ApplicationException ex)
@@ -48,16 +49,12 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Profile>> Post(ProfileDto request)
+        public async Task<ActionResult<Transaction>> Post(TransactionDto request)
         {
             try
             {
-                var profileDb = await profileService.GetByTitleAsync(request.Title);
-                if (profileDb is not null)
-                    return Conflict("Já existe uma Profile com esse título.");
-
-                Profile profile = await profileService.PostAsync(request, UserId);
-                return Ok(profile);
+                Transaction transaction = await transactionService.PostAsync(request, ProfileId);
+                return Ok(transaction);
             }
             catch (ApplicationException ex)
             {
@@ -70,16 +67,20 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<Profile>> Put(ProfileUpdateDto request)
+        public async Task<ActionResult<Transaction>> Put(TransactionUpdateDto request)
         {
             try
             {
-                var profileDb = await profileService.GetAsync(request.Id);
-                if (profileDb is null)
-                    return NotFound("Profile não encontrada.");
+                var transactionDb = await transactionService.GetAsync(request.Id);
+                if (transactionDb is null)
+                    return NotFound("Transaction não encontrada.");
 
-                var profile = await profileService.PutAsync(profileDb);
-                return Ok(profile);
+                transactionDb.Title = request.Title;
+                transactionDb.Type = request.Type;
+                transactionDb.ValueBrl = request.ValueBrl;
+
+                var transaction = await transactionService.PutAsync(transactionDb);
+                return Ok(transaction);
             }
             catch (ApplicationException ex)
             {
@@ -91,16 +92,16 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
-        [HttpDelete("{profileId}")]
-        public async Task<ActionResult<bool>> Delete(Guid profileId)
+        [HttpDelete("{transactionId}")]
+        public async Task<ActionResult<bool>> Delete(Guid transactionId)
         {
             try
             {
-                var profileDb = await profileService.GetAsync(profileId);
-                if (profileDb is null)
-                    return NotFound("Profile não encontrada.");
+                var transactionDb = await transactionService.GetAsync(transactionId);
+                if (transactionDb is null)
+                    return NotFound("Transaction não encontrada.");
 
-                var deleted = await profileService.DeleteAsync(profileDb);
+                var deleted = await transactionService.DeleteAsync(transactionDb);
                 return Ok(deleted);
             }
             catch (ApplicationException ex)

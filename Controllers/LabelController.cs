@@ -1,22 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using SageFinancialAPI.Entities;
+using Microsoft.AspNetCore.Authorization;
 using SageFinancialAPI.Models;
 using SageFinancialAPI.Services;
-using Microsoft.AspNetCore.Authorization;
 
 namespace SageFinancialAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class ProfileController(IProfileService profileService) : BaseController
+    public class LabelController(ILabelService labelService) : BaseController
     {
-        [HttpGet("{profileId}")]
-        public async Task<ActionResult<Profile?>> Get(Guid profileId)
+        [HttpGet("{labelId}")]
+        public async Task<ActionResult<Label?>> Get(Guid labelId)
         {
             try
             {
-                var result = await profileService.GetAsync(profileId);
+                var result = await labelService.GetAsync(labelId);
                 return Ok(result);
             }
             catch (ApplicationException ex)
@@ -30,11 +30,11 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpGet("all")]
-        public async Task<ActionResult<ICollection<Profile>>> GetAll()
+        public async Task<ActionResult<ICollection<Label>>> GetAll()
         {
             try
             {
-                var result = await profileService.GetAllAsync(UserId);
+                var result = await labelService.GetAllAsync(ProfileId);
                 return Ok(result);
             }
             catch (ApplicationException ex)
@@ -48,16 +48,12 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Profile>> Post(ProfileDto request)
+        public async Task<ActionResult<Label>> Post(LabelDto request)
         {
             try
             {
-                var profileDb = await profileService.GetByTitleAsync(request.Title);
-                if (profileDb is not null)
-                    return Conflict("Já existe uma Profile com esse título.");
-
-                Profile profile = await profileService.PostAsync(request, UserId);
-                return Ok(profile);
+                Label label = await labelService.PostAsync(request, ProfileId);
+                return Ok(label);
             }
             catch (ApplicationException ex)
             {
@@ -70,16 +66,20 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<Profile>> Put(ProfileUpdateDto request)
+        public async Task<ActionResult<Label>> Put(LabelUpdateDto request)
         {
             try
             {
-                var profileDb = await profileService.GetAsync(request.Id);
-                if (profileDb is null)
-                    return NotFound("Profile não encontrada.");
+                var labelDb = await labelService.GetAsync(request.Id);
+                if (labelDb is null)
+                    return NotFound("Label não encontrada.");
 
-                var profile = await profileService.PutAsync(profileDb);
-                return Ok(profile);
+                labelDb.Title = request.Title;
+                labelDb.ColorHex = request.ColorHex;
+                labelDb.IsActive = request.IsActive;
+
+                var label = await labelService.PutAsync(labelDb);
+                return Ok(label);
             }
             catch (ApplicationException ex)
             {
@@ -91,16 +91,16 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
-        [HttpDelete("{profileId}")]
-        public async Task<ActionResult<bool>> Delete(Guid profileId)
+        [HttpDelete("{labelId}")]
+        public async Task<ActionResult<bool>> Delete(Guid labelId)
         {
             try
             {
-                var profileDb = await profileService.GetAsync(profileId);
-                if (profileDb is null)
-                    return NotFound("Profile não encontrada.");
+                var labelDb = await labelService.GetAsync(labelId);
+                if (labelDb is null)
+                    return NotFound("Label não encontrada.");
 
-                var deleted = await profileService.DeleteAsync(profileDb);
+                var deleted = await labelService.DeleteAsync(labelDb);
                 return Ok(deleted);
             }
             catch (ApplicationException ex)

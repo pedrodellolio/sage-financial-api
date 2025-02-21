@@ -8,5 +8,7 @@ namespace SageFinancialAPI.Entities
         public string? RefreshToken { get; set; }
         public DateTime? RefreshTokenExpiryTime { get; set; }
         public ICollection<Profile> Profiles { get; set; } = [];
+        public ICollection<Wallet> Wallets { get; set; } = [];
+
     }
 }

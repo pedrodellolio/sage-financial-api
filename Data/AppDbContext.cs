@@ -78,6 +78,7 @@ namespace SageFinancialAPI.Data
                     .HasIndex(p => new { p.UserId, p.Title })
                     .IsUnique();
 
+
             base.OnModelCreating(modelBuilder);
         }
 

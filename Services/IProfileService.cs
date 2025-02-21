@@ -6,10 +6,10 @@ namespace SageFinancialAPI.Services
     public interface IProfileService
     {
         Task<Profile?> GetAsync(Guid profileId);
-        Task<ICollection<Profile>> GetAllAsync();
         Task<Profile?> GetByTitleAsync(string title);
-        Task<Profile> PostAsync(ProfileDto request);
-        Task<Profile?> PutAsync(Profile request);
-        Task<bool> DeleteAsync(Guid profileId);
+        Task<ICollection<Profile>> GetAllAsync(Guid userId);
+        Task<Profile> PostAsync(ProfileDto request, Guid userId);
+        Task<Profile> PutAsync(Profile profile);
+        Task<bool> DeleteAsync(Profile profile);
     }
 }
