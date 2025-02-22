@@ -30,6 +30,25 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
+        [HttpGet("get-by-month-year")]
+        public async Task<ActionResult<ICollection<Transaction>>> GetByMonthAndYear(int month, int year)
+        {
+            try
+            {
+                var result = await transactionService.GetByMonthAndYearAsync(month, year, ProfileId);
+                Console.WriteLine(result);
+                return Ok(result);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return BadRequest("Ocorreu um erro inesperado.");
+            }
+        }
+
         [HttpGet("all")]
         public async Task<ActionResult<ICollection<Transaction>>> GetAll()
         {

@@ -8,8 +8,8 @@ namespace SageFinancialAPI.Entities
         public DateTime OccurredAt { get; set; }
         public Guid WalletId { get; set; }
         public Wallet Wallet { get; set; } = null!;
-        public Guid FileId { get; set; }
-        public File File { get; set; } = null!;
+        public Guid? FileId { get; set; }
+        public File? File { get; set; } = null;
         public ICollection<Label> Labels { get; set; } = [];
     }
 

@@ -31,7 +31,8 @@ namespace SageFinancialAPI.Services
             var newWallet = new Wallet
             {
                 Month = month,
-                Year = year
+                Year = year,
+                ProfileId = profileId
             };
 
             context.Wallets.Add(newWallet);
@@ -45,7 +46,9 @@ namespace SageFinancialAPI.Services
             var month = request.OccurredAt.Month;
             var year = request.OccurredAt.Year;
 
+            Console.WriteLine(profileId);
             var existingWallet = await GetByMonthAndYearAsync(month, year, profileId);
+            Console.WriteLine("wallet: " + existingWallet);
             if (existingWallet != null)
             {
                 var isExpense = request.Type == TransactionType.EXPENSE;
@@ -57,7 +60,7 @@ namespace SageFinancialAPI.Services
                 return await PutAsync(existingWallet);
             }
 
-            return await PostAsync(month, year, profileId); ;
+            return await PostAsync(month, year, profileId);
         }
 
         public async Task<Wallet> PutAsync(Wallet wallet)

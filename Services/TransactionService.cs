@@ -21,6 +21,13 @@ namespace SageFinancialAPI.Services
             return await context.Transactions.Where(t => t.Wallet.ProfileId == profileId).ToListAsync();
         }
 
+        public async Task<ICollection<Transaction>> GetByMonthAndYearAsync(int month, int year, Guid profileId)
+        {
+            return await context.Transactions
+                .Where(t => t.CreatedAt.Month == month && t.CreatedAt.Year == year && t.Wallet.ProfileId == profileId)
+                .ToListAsync();
+        }
+
         public async Task<ICollection<Transaction>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId)
         {
             return await context.Transactions
@@ -30,6 +37,7 @@ namespace SageFinancialAPI.Services
 
         public async Task<Transaction> PostAsync(TransactionDto request, Guid profileId)
         {
+            Console.WriteLine(profileId);
             Wallet wallet = await walletService.CreateOrUpdateAsync(request, profileId);
             var newTransaction = new Transaction
             {

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SageFinancialAPI.Entities
 {
     public class Wallet : BaseEntity
@@ -8,6 +10,8 @@ namespace SageFinancialAPI.Entities
         public decimal IncomesBrl { get; set; }
         public Guid ProfileId { get; set; }
         public Profile Profile { get; set; } = null!;
+
+        [JsonIgnore]
         public ICollection<Transaction> Transactions { get; set; } = [];
     }
 }

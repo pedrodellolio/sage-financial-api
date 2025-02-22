@@ -15,7 +15,7 @@ namespace SageFinancialAPI.Controllers
     [ApiController]
     public class AuthController(IAuthService authService) : ControllerBase
     {
-        [HttpGet]
+        [HttpPost("login")]
         public async Task<ActionResult<TokenResponseDto>> Login(UserDto request)
         {
             var result = await authService.LoginAsync(request);
@@ -24,7 +24,7 @@ namespace SageFinancialAPI.Controllers
             return Ok(result);
         }
 
-        [HttpPost]
+        [HttpPost("register")]
         public async Task<ActionResult<User>> Register(UserDto request)
         {
             var user = await authService.RegisterAsync(request);
