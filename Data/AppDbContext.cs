@@ -78,6 +78,10 @@ namespace SageFinancialAPI.Data
                     .HasIndex(p => new { p.UserId, p.Title })
                     .IsUnique();
 
+            // Index único UserId + Título
+            modelBuilder.Entity<Wallet>()
+                    .HasIndex(w => new { w.Month, w.Year })
+                    .IsUnique();
 
             base.OnModelCreating(modelBuilder);
         }

@@ -28,12 +28,19 @@ namespace SageFinancialAPI.Services
                 .ToListAsync();
         }
 
-        public async Task<ICollection<Transaction>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId)
+        public async Task<ICollection<Transaction>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId, TransactionType? type = null)
         {
             return await context.Transactions
-                .Where(t => t.CreatedAt > start && t.CreatedAt < end && t.Wallet.ProfileId == profileId)
+                .Where(t =>
+                    t.CreatedAt > start &&
+                    t.CreatedAt < end &&
+                    t.Wallet.ProfileId == profileId &&
+                    (type == null || t.Type == type)
+                )
+                .OrderBy(t => t.CreatedAt)
                 .ToListAsync();
         }
+
 
         public async Task<Transaction> PostAsync(TransactionDto request, Guid profileId)
         {

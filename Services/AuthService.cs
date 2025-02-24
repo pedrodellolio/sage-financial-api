@@ -68,7 +68,7 @@ namespace SageFinancialAPI.Services
                 issuer: configuration.GetValue<string>("AppSettings:Issuer"),
                 audience: configuration.GetValue<string>("AppSettings:Audience"),
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
+                expires: DateTime.UtcNow.AddSeconds(30),
                 signingCredentials: credentials
             );
 
@@ -77,16 +77,16 @@ namespace SageFinancialAPI.Services
 
         public async Task<TokenResponseDto?> RefreshTokensAsync(RefreshTokenRequestDto request)
         {
-            var user = await ValidateRefreshTokenAsync(request.UserId, request.RefreshToken);
+            var user = await ValidateRefreshTokenAsync(request.RefreshToken);
             if (user is null)
                 return null;
 
             return await CreateTokenResponse(user);
         }
 
-        private async Task<User?> ValidateRefreshTokenAsync(Guid userId, string refreshToken)
+        private async Task<User?> ValidateRefreshTokenAsync(string refreshToken)
         {
-            var user = await context.Users.FindAsync(userId);
+            var user = await context.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
             if (user is null || user.RefreshToken != refreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 return null;
 

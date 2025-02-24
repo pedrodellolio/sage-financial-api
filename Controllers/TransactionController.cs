@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using SageFinancialAPI.Models;
 using SageFinancialAPI.Services;
 using System.Security.Claims;
+using Newtonsoft.Json;
 
 namespace SageFinancialAPI.Controllers
 {
@@ -49,6 +50,24 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
+        [HttpGet("get-by-period")]
+        public async Task<ActionResult<ICollection<Transaction>>> GetByPeriod(DateTime start, DateTime end, TransactionType? type)
+        {
+            try
+            {
+                var result = await transactionService.GetByPeriodAsync(start, end, ProfileId, type);
+                return Ok(result);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return BadRequest("Ocorreu um erro inesperado.");
+            }
+        }
+
         [HttpGet("all")]
         public async Task<ActionResult<ICollection<Transaction>>> GetAll()
         {
@@ -72,6 +91,7 @@ namespace SageFinancialAPI.Controllers
         {
             try
             {
+                Console.WriteLine(JsonConvert.SerializeObject(request));
                 Transaction transaction = await transactionService.PostAsync(request, ProfileId);
                 return Ok(transaction);
             }
