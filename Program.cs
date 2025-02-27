@@ -9,7 +9,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -30,30 +29,36 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
 );
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
 .AddJwtBearer(options =>
 {
+    // options.Authority = builder.Configuration["AppSettings:Authority"];
+    // options.Audience = builder.Configuration["AppSettings:Audience"];
     options.TokenValidationParameters = new TokenValidationParameters()
     {
         ValidateIssuer = true,
-        ValidIssuer = builder.Configuration["AppSettings:Issuer"],
         ValidateAudience = true,
-        ValidAudience = builder.Configuration["AppSettings:Audience"],
         ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["AppSettings:Issuer"],
+        ValidAudience = builder.Configuration["AppSettings:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Token"]!)),
-        ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        // ValidateLifetime = true,
+        // ClockSkew = TimeSpan.Zero
     };
 
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            if (context.Exception is SecurityTokenExpiredException)
-                context.Response.Headers.Append("Token-Expired", "true");
-            return Task.CompletedTask;
-        }
-    };
+    // options.Events = new JwtBearerEvents
+    // {
+    //     OnAuthenticationFailed = context =>
+    //     {
+    //         if (context.Exception is SecurityTokenExpiredException)
+    //             context.Response.Headers.Append("Token-Expired", "true");
+    //         return Task.CompletedTask;
+    //     }
+    // };
 });
 
 builder.Services.AddScoped<IAuthService, AuthService>();

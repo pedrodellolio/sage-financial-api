@@ -8,5 +8,6 @@ namespace SageFinancialAPI.Models
         public decimal ValueBrl { get; set; }
         public TransactionType Type { get; set; }
         public DateTime OccurredAt { get; set; }
+        public ICollection<Guid> Labels { get; set; } = [];
     }
 }

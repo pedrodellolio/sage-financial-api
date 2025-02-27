@@ -12,8 +12,8 @@ using SageFinancialAPI.Data;
 namespace SageFinancialAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250220025918_UniqueProfileTitleUserId")]
-    partial class UniqueProfileTitleUserId
+    [Migration("20250225142922_InitialMigration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -187,7 +187,7 @@ namespace SageFinancialAPI.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("FileId")
+                    b.Property<Guid?>("FileId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("OccurredAt")
@@ -224,25 +224,17 @@ namespace SageFinancialAPI.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("RefreshTokenExpiryTime")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users");
                 });
@@ -268,12 +260,20 @@ namespace SageFinancialAPI.Migrations
                     b.Property<Guid>("ProfileId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProfileId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("Month", "Year")
+                        .IsUnique();
 
                     b.ToTable("Wallets");
                 });
@@ -360,9 +360,7 @@ namespace SageFinancialAPI.Migrations
                 {
                     b.HasOne("SageFinancialAPI.Entities.File", "File")
                         .WithMany("Transactions")
-                        .HasForeignKey("FileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("FileId");
 
                     b.HasOne("SageFinancialAPI.Entities.Wallet", "Wallet")
                         .WithMany("Transactions")
@@ -382,6 +380,10 @@ namespace SageFinancialAPI.Migrations
                         .HasForeignKey("ProfileId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("SageFinancialAPI.Entities.User", null)
+                        .WithMany("Wallets")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Profile");
                 });
@@ -415,6 +417,8 @@ namespace SageFinancialAPI.Migrations
             modelBuilder.Entity("SageFinancialAPI.Entities.User", b =>
                 {
                     b.Navigation("Profiles");
+
+                    b.Navigation("Wallets");
                 });
 
             modelBuilder.Entity("SageFinancialAPI.Entities.Wallet", b =>

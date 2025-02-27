@@ -27,7 +27,7 @@ namespace SageFinancialAPI.Services
             {
                 Title = request.Title,
                 ColorHex = request.ColorHex,
-                IsDefault = request.IsDefault
+                IsDefault = request.IsDefault,
             };
 
             context.Labels.Add(newLabel);

@@ -46,17 +46,16 @@ namespace SageFinancialAPI.Services
             var month = request.OccurredAt.Month;
             var year = request.OccurredAt.Year;
 
-            Console.WriteLine(profileId);
             var existingWallet = await GetByMonthAndYearAsync(month, year, profileId);
-            Console.WriteLine("wallet: " + existingWallet);
             if (existingWallet != null)
             {
                 var isExpense = request.Type == TransactionType.EXPENSE;
                 if (isExpense)
-                    existingWallet.ExpensesBrl += request.ValueBrl;
-                else
                     existingWallet.ExpensesBrl -= request.ValueBrl;
+                else
+                    existingWallet.ExpensesBrl += request.ValueBrl;
 
+                existingWallet.ExpensesBrl = Math.Abs(existingWallet.ExpensesBrl);
                 return await PutAsync(existingWallet);
             }
 

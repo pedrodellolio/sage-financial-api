@@ -83,6 +83,10 @@ namespace SageFinancialAPI.Data
                     .HasIndex(w => new { w.Month, w.Year })
                     .IsUnique();
 
+            modelBuilder.Entity<User>()
+                    .HasIndex(w => new { w.Email })
+                    .IsUnique();
+
             base.OnModelCreating(modelBuilder);
         }
 

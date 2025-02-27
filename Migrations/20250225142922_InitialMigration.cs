@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SageFinancialAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class AddEntities : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,11 +16,8 @@ namespace SageFinancialAPI.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Username = table.Column<string>(type: "text", nullable: false),
-                    PasswordHash = table.Column<string>(type: "text", nullable: false),
-                    Role = table.Column<string>(type: "text", nullable: false),
-                    RefreshToken = table.Column<string>(type: "text", nullable: true),
-                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -29,7 +26,7 @@ namespace SageFinancialAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Profile",
+                name: "Profiles",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -40,9 +37,9 @@ namespace SageFinancialAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Profile", x => x.Id);
+                    table.PrimaryKey("PK_Profiles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Profile_Users_UserId",
+                        name: "FK_Profiles_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -50,7 +47,7 @@ namespace SageFinancialAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Budget",
+                name: "Budgets",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -61,11 +58,11 @@ namespace SageFinancialAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Budget", x => x.Id);
+                    table.PrimaryKey("PK_Budgets", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Budget_Profile_ProfileId",
+                        name: "FK_Budgets_Profiles_ProfileId",
                         column: x => x.ProfileId,
-                        principalTable: "Profile",
+                        principalTable: "Profiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -83,9 +80,9 @@ namespace SageFinancialAPI.Migrations
                 {
                     table.PrimaryKey("PK_Files", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Files_Profile_ProfileId",
+                        name: "FK_Files_Profiles_ProfileId",
                         column: x => x.ProfileId,
-                        principalTable: "Profile",
+                        principalTable: "Profiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -106,15 +103,15 @@ namespace SageFinancialAPI.Migrations
                 {
                     table.PrimaryKey("PK_Labels", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Labels_Profile_ProfileId",
+                        name: "FK_Labels_Profiles_ProfileId",
                         column: x => x.ProfileId,
-                        principalTable: "Profile",
+                        principalTable: "Profiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Wallet",
+                name: "Wallets",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -123,21 +120,27 @@ namespace SageFinancialAPI.Migrations
                     ExpensesBrl = table.Column<decimal>(type: "numeric", nullable: false),
                     IncomesBrl = table.Column<decimal>(type: "numeric", nullable: false),
                     ProfileId = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Wallet", x => x.Id);
+                    table.PrimaryKey("PK_Wallets", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Wallet_Profile_ProfileId",
+                        name: "FK_Wallets_Profiles_ProfileId",
                         column: x => x.ProfileId,
-                        principalTable: "Profile",
+                        principalTable: "Profiles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Wallets_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "BudgetGoal",
+                name: "BudgetGoals",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -149,15 +152,15 @@ namespace SageFinancialAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_BudgetGoal", x => x.Id);
+                    table.PrimaryKey("PK_BudgetGoals", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_BudgetGoal_Budget_BudgetId",
+                        name: "FK_BudgetGoals_Budgets_BudgetId",
                         column: x => x.BudgetId,
-                        principalTable: "Budget",
+                        principalTable: "Budgets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_BudgetGoal_Labels_LabelId",
+                        name: "FK_BudgetGoals_Labels_LabelId",
                         column: x => x.LabelId,
                         principalTable: "Labels",
                         principalColumn: "Id",
@@ -174,7 +177,7 @@ namespace SageFinancialAPI.Migrations
                     Type = table.Column<int>(type: "integer", nullable: false),
                     OccurredAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     WalletId = table.Column<Guid>(type: "uuid", nullable: false),
-                    FileId = table.Column<Guid>(type: "uuid", nullable: false),
+                    FileId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -184,30 +187,53 @@ namespace SageFinancialAPI.Migrations
                         name: "FK_Transactions_Files_FileId",
                         column: x => x.FileId,
                         principalTable: "Files",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Transactions_Wallets_WalletId",
+                        column: x => x.WalletId,
+                        principalTable: "Wallets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TransactionLabels",
+                columns: table => new
+                {
+                    LabelsId = table.Column<Guid>(type: "uuid", nullable: false),
+                    TransactionsId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TransactionLabels", x => new { x.LabelsId, x.TransactionsId });
+                    table.ForeignKey(
+                        name: "FK_TransactionLabels_Labels_LabelsId",
+                        column: x => x.LabelsId,
+                        principalTable: "Labels",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Transactions_Wallet_WalletId",
-                        column: x => x.WalletId,
-                        principalTable: "Wallet",
+                        name: "FK_TransactionLabels_Transactions_TransactionsId",
+                        column: x => x.TransactionsId,
+                        principalTable: "Transactions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Budget_ProfileId",
-                table: "Budget",
-                column: "ProfileId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BudgetGoal_BudgetId",
-                table: "BudgetGoal",
+                name: "IX_BudgetGoals_BudgetId",
+                table: "BudgetGoals",
                 column: "BudgetId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BudgetGoal_LabelId",
-                table: "BudgetGoal",
+                name: "IX_BudgetGoals_LabelId",
+                table: "BudgetGoals",
                 column: "LabelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Budgets_ProfileId",
+                table: "Budgets",
+                column: "ProfileId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Files_ProfileId",
@@ -220,9 +246,15 @@ namespace SageFinancialAPI.Migrations
                 column: "ProfileId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Profile_UserId",
-                table: "Profile",
-                column: "UserId");
+                name: "IX_Profiles_UserId_Title",
+                table: "Profiles",
+                columns: new[] { "UserId", "Title" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TransactionLabels_TransactionsId",
+                table: "TransactionLabels",
+                column: "TransactionsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_FileId",
@@ -235,34 +267,54 @@ namespace SageFinancialAPI.Migrations
                 column: "WalletId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Wallet_ProfileId",
-                table: "Wallet",
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Wallets_Month_Year",
+                table: "Wallets",
+                columns: new[] { "Month", "Year" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Wallets_ProfileId",
+                table: "Wallets",
                 column: "ProfileId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Wallets_UserId",
+                table: "Wallets",
+                column: "UserId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "BudgetGoal");
+                name: "BudgetGoals");
 
             migrationBuilder.DropTable(
-                name: "Transactions");
+                name: "TransactionLabels");
 
             migrationBuilder.DropTable(
-                name: "Budget");
+                name: "Budgets");
 
             migrationBuilder.DropTable(
                 name: "Labels");
 
             migrationBuilder.DropTable(
+                name: "Transactions");
+
+            migrationBuilder.DropTable(
                 name: "Files");
 
             migrationBuilder.DropTable(
-                name: "Wallet");
+                name: "Wallets");
 
             migrationBuilder.DropTable(
-                name: "Profile");
+                name: "Profiles");
 
             migrationBuilder.DropTable(
                 name: "Users");

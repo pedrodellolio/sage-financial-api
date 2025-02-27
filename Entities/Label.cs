@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SageFinancialAPI.Entities
 {
     public class Label : BaseEntity
@@ -8,7 +10,9 @@ namespace SageFinancialAPI.Entities
         public bool IsDefault { get; set; } = false;
         public Guid ProfileId { get; set; }
         public Profile Profile { get; set; } = null!;
+        [JsonIgnore]
         public ICollection<BudgetGoal> BudgetGoals { get; set; } = [];
+        [JsonIgnore]
         public ICollection<Transaction> Transactions { get; set; } = [];
     }
 }

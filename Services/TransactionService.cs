@@ -9,7 +9,7 @@ using SageFinancialAPI.Models;
 
 namespace SageFinancialAPI.Services
 {
-    public class TransactionService(AppDbContext context, IWalletService walletService) : ITransactionService
+    public class TransactionService(AppDbContext context, IWalletService walletService, ILabelService labelService) : ITransactionService
     {
         public async Task<Transaction?> GetAsync(Guid transactionId)
         {
@@ -44,7 +44,6 @@ namespace SageFinancialAPI.Services
 
         public async Task<Transaction> PostAsync(TransactionDto request, Guid profileId)
         {
-            Console.WriteLine(profileId);
             Wallet wallet = await walletService.CreateOrUpdateAsync(request, profileId);
             var newTransaction = new Transaction
             {
@@ -52,9 +51,18 @@ namespace SageFinancialAPI.Services
                 Type = request.Type,
                 ValueBrl = request.ValueBrl,
                 OccurredAt = request.OccurredAt,
-                WalletId = wallet.Id
+                WalletId = wallet.Id,
             };
 
+            var labels = new List<Label>();
+            foreach (var labelId in request.Labels)
+            {
+                var label = await labelService.GetAsync(labelId);
+                if (label != null)
+                    labels.Add(label);
+            }
+
+            newTransaction.Labels = labels;
             context.Transactions.Add(newTransaction);
             await context.SaveChangesAsync();
             return newTransaction;
