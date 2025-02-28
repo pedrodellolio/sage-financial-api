@@ -18,13 +18,14 @@ namespace SageFinancialAPI.Services
 
         public async Task<ICollection<Transaction>> GetAllAsync(Guid profileId)
         {
-            return await context.Transactions.Where(t => t.Wallet.ProfileId == profileId).ToListAsync();
+            return await context.Transactions.Where(t => t.Wallet.ProfileId == profileId).OrderByDescending(t => t.OccurredAt).ToListAsync();
         }
 
         public async Task<ICollection<Transaction>> GetByMonthAndYearAsync(int month, int year, Guid profileId)
         {
             return await context.Transactions
                 .Where(t => t.CreatedAt.Month == month && t.CreatedAt.Year == year && t.Wallet.ProfileId == profileId)
+                .OrderByDescending(t => t.OccurredAt)
                 .ToListAsync();
         }
 
@@ -37,7 +38,7 @@ namespace SageFinancialAPI.Services
                     t.Wallet.ProfileId == profileId &&
                     (type == null || t.Type == type)
                 )
-                .OrderBy(t => t.CreatedAt)
+                .OrderByDescending(t => t.OccurredAt)
                 .ToListAsync();
         }
 
@@ -68,8 +69,10 @@ namespace SageFinancialAPI.Services
             return newTransaction;
         }
 
-        public async Task<Transaction> PutAsync(Transaction transaction)
+        public async Task<Transaction> PutAsync(Transaction transaction, decimal oldValue)
         {
+            await walletService.IncrementAsync(transaction, oldValue);
+
             context.Transactions.Update(transaction);
             await context.SaveChangesAsync();
             return transaction;

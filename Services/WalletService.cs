@@ -69,6 +69,21 @@ namespace SageFinancialAPI.Services
             return wallet;
         }
 
+        public async Task<Wallet?> IncrementAsync(Transaction transaction, decimal oldValue)
+        {
+            var existingWallet = await GetAsync(transaction.WalletId);
+            if (existingWallet == null)
+                return null;
+
+            var diff = transaction.ValueBrl - oldValue;
+            if (transaction.Type == TransactionType.EXPENSE)
+                existingWallet.ExpensesBrl += diff;
+            else
+                existingWallet.IncomesBrl += diff;
+
+            return await PutAsync(existingWallet);
+        }
+
         public async Task<bool> DeleteAsync(Wallet wallet)
         {
             context.Wallets.Remove(wallet);

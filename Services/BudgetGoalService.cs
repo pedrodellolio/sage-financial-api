@@ -21,9 +21,9 @@ namespace SageFinancialAPI.Services
             return await context.BudgetGoals.Where(l => l.Budget.ProfileId == budgetId).ToListAsync();
         }
 
-        public async Task<ICollection<BudgetGoal>> GetByBudgetMonthAndYearAsync(int month, int year, Guid budgetId)
+        public async Task<ICollection<BudgetGoal>> GetByBudgetMonthAndYearAsync(int month, int year, Guid profileId)
         {
-            return await context.BudgetGoals.Where(l => l.Budget.Month == month && l.Budget.Year == year && l.BudgetId == budgetId).ToListAsync();
+            return await context.BudgetGoals.Where(l => l.Budget.Month == month && l.Budget.Year == year && l.Budget.ProfileId == profileId).ToListAsync();
         }
 
         public async Task<BudgetGoal> PostAsync(BudgetGoalDto request, Guid budgetId)

@@ -114,11 +114,12 @@ namespace SageFinancialAPI.Controllers
                 if (transactionDb is null)
                     return NotFound("Transaction não encontrada.");
 
+                var oldValue = transactionDb.ValueBrl;
                 transactionDb.Title = request.Title;
                 transactionDb.Type = request.Type;
                 transactionDb.ValueBrl = request.ValueBrl;
 
-                var transaction = await transactionService.PutAsync(transactionDb);
+                var transaction = await transactionService.PutAsync(transactionDb, oldValue);
                 return Ok(transaction);
             }
             catch (ApplicationException ex)

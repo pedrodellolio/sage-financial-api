@@ -10,7 +10,7 @@ namespace SageFinancialAPI.Services
         Task<ICollection<Transaction>> GetByMonthAndYearAsync(int month, int year, Guid profileId);
         Task<ICollection<Transaction>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId, TransactionType? type = null);
         Task<Transaction> PostAsync(TransactionDto request, Guid profileId);
-        Task<Transaction> PutAsync(Transaction wallet);
+        Task<Transaction> PutAsync(Transaction wallet, decimal oldValue);
         Task<bool> DeleteAsync(Transaction Transaction);
     }
 }

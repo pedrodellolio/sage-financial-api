@@ -11,6 +11,7 @@ namespace SageFinancialAPI.Services
         Task<Wallet> PostAsync(int month, int year, Guid profileId);
         Task<Wallet> CreateOrUpdateAsync(TransactionDto request, Guid profileId);
         Task<Wallet> PutAsync(Wallet wallet);
+        Task<Wallet?> IncrementAsync(Transaction transaction, decimal oldValue);
         Task<bool> DeleteAsync(Wallet Wallet);
     }
 }

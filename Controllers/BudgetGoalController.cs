@@ -29,7 +29,7 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
-        [HttpGet("period")]
+        [HttpGet("get-by-month-year")]
         public async Task<ActionResult<BudgetGoal?>> GetByBudgetMonthAndYear(int month, int year)
         {
             try
