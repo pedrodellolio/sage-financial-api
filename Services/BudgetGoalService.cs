@@ -3,36 +3,54 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using SageFinancialAPI.Data;
 using SageFinancialAPI.Entities;
 using SageFinancialAPI.Models;
 
 namespace SageFinancialAPI.Services
 {
-    public class BudgetGoalService(AppDbContext context) : IBudgetGoalService
+    public class BudgetGoalService(AppDbContext context, IBudgetService budgetService) : IBudgetGoalService
     {
         public async Task<BudgetGoal?> GetAsync(Guid budgetGoalId)
         {
-            return await context.BudgetGoals.FindAsync(budgetGoalId);
+            return await context.BudgetGoals
+                .Include(t => t.Label)
+                .FirstOrDefaultAsync(t => t.Id == budgetGoalId);
         }
 
         public async Task<ICollection<BudgetGoal>> GetAllAsync(Guid budgetId)
         {
-            return await context.BudgetGoals.Where(l => l.Budget.ProfileId == budgetId).ToListAsync();
+            return await context.BudgetGoals
+                .Include(bg => bg.Budget)
+                .Include(bg => bg.Label)
+                .Where(bg => bg.Budget.ProfileId == budgetId)
+                .ToListAsync();
         }
 
         public async Task<ICollection<BudgetGoal>> GetByBudgetMonthAndYearAsync(int month, int year, Guid profileId)
         {
-            return await context.BudgetGoals.Where(l => l.Budget.Month == month && l.Budget.Year == year && l.Budget.ProfileId == profileId).ToListAsync();
+            var result = await context.BudgetGoals
+                .Include(bg => bg.Budget)
+                .Include(bg => bg.Label)
+                .Where(bg => bg.Budget.Month == month
+                            && bg.Budget.Year == year
+                            && bg.Budget.ProfileId == profileId).ToListAsync();
+            return result;
         }
 
-        public async Task<BudgetGoal> PostAsync(BudgetGoalDto request, Guid budgetId)
+        public async Task<BudgetGoal> PostAsync(BudgetGoalDto request, Guid profileId)
         {
+            var budget = await budgetService.GetByMonthAndYearAsync(request.Month, request.Year, profileId);
+            if (budget is null)
+                budget = await budgetService.PostAsync(new BudgetDto { Month = request.Month, Year = request.Year }, profileId);
+
             var newBudgetGoal = new BudgetGoal
             {
                 Value = request.Value,
                 Type = request.Type,
-                BudgetId = budgetId
+                LabelId = request.Label.Id,
+                BudgetId = budget.Id
             };
 
             context.BudgetGoals.Add(newBudgetGoal);

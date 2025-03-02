@@ -1,8 +1,7 @@
 namespace SageFinancialAPI.Models
 {
-    public class LabelDto
+    public class LabelResponseDto
     {
-        public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public string ColorHex { get; set; } = string.Empty;
         public bool IsDefault { get; set; }

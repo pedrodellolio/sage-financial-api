@@ -36,8 +36,7 @@ namespace SageFinancialAPI.Controllers
         {
             try
             {
-                var result = await transactionService.GetByMonthAndYearAsync(month, year, ProfileId);
-                Console.WriteLine(result);
+                var result = await transactionService.GetAllByMonthAndYearAsync(month, year, ProfileId);
                 return Ok(result);
             }
             catch (ApplicationException ex)
@@ -86,14 +85,14 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Transaction>> Post(TransactionDto request)
+        [HttpGet("total")]
+        public async Task<ActionResult<decimal>> GetTotalExpenses(int month, int year, Guid labelId)
         {
             try
             {
-                Console.WriteLine(JsonConvert.SerializeObject(request));
-                Transaction transaction = await transactionService.PostAsync(request, ProfileId);
-                return Ok(transaction);
+                var result = await transactionService.GetAllByMonthAndYearLabelAsync(month, year, labelId, ProfileId, TransactionType.EXPENSE);
+                var total = result.Sum(t => t.ValueBrl);
+                return Ok(total);
             }
             catch (ApplicationException ex)
             {
@@ -101,6 +100,25 @@ namespace SageFinancialAPI.Controllers
             }
             catch
             {
+                return BadRequest("Ocorreu um erro inesperado.");
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Transaction>> Post(TransactionDto request)
+        {
+            try
+            {
+                Transaction transaction = await transactionService.PostAsync(request, ProfileId);
+                return Ok(transaction);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
                 return BadRequest("Ocorreu um erro inesperado.");
             }
         }

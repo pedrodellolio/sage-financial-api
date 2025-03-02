@@ -30,19 +30,26 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpGet("all")]
-        public async Task<ActionResult<ICollection<Label>>> GetAll()
+        public async Task<ActionResult<ICollection<LabelDto>>> GetAll(int? month, int? year, bool fromBudgetGoal)
         {
             try
             {
-                var result = await labelService.GetAllAsync(ProfileId);
+                ICollection<LabelDto> result;
+
+                if (month is not null && year is not null && fromBudgetGoal)
+                    result = await labelService.GetAllNotInBudgetGoalAsync(month.Value, year.Value, ProfileId);
+                else
+                    result = await labelService.GetAllAsync(ProfileId);
+
                 return Ok(result);
             }
             catch (ApplicationException ex)
             {
                 return BadRequest(ex.Message);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return BadRequest("Ocorreu um erro inesperado.");
             }
         }

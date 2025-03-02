@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SageFinancialAPI.Entities
 {
     public class Transaction : BaseEntity
@@ -10,7 +12,8 @@ namespace SageFinancialAPI.Entities
         public Wallet Wallet { get; set; } = null!;
         public Guid? FileId { get; set; }
         public File? File { get; set; } = null;
-        public ICollection<Label> Labels { get; set; } = [];
+        public Guid? LabelId { get; set; }
+        public Label? Label { get; set; } = null;
     }
 
     public enum TransactionType

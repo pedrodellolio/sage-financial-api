@@ -23,7 +23,10 @@ namespace SageFinancialAPI.Services
 
         public async Task<Wallet?> GetByMonthAndYearAsync(int month, int year, Guid profileId)
         {
-            return await context.Wallets.FirstOrDefaultAsync(w => w.Month == month && w.Year == year);
+            var wallet = await context.Wallets.FirstOrDefaultAsync(w => w.Month == month && w.Year == year);
+            if (wallet is null && month != 0 && year != 0)
+                wallet = await PostAsync(month, year, profileId);
+            return wallet;
         }
 
         public async Task<Wallet> PostAsync(int month, int year, Guid profileId)
@@ -51,11 +54,10 @@ namespace SageFinancialAPI.Services
             {
                 var isExpense = request.Type == TransactionType.EXPENSE;
                 if (isExpense)
-                    existingWallet.ExpensesBrl -= request.ValueBrl;
-                else
                     existingWallet.ExpensesBrl += request.ValueBrl;
+                else
+                    existingWallet.IncomesBrl += request.ValueBrl;
 
-                existingWallet.ExpensesBrl = Math.Abs(existingWallet.ExpensesBrl);
                 return await PutAsync(existingWallet);
             }
 
@@ -89,6 +91,18 @@ namespace SageFinancialAPI.Services
             context.Wallets.Remove(wallet);
             var result = await context.SaveChangesAsync();
             return result > 0;
+        }
+
+        public async Task<Wallet> PatchAsync(Wallet wallet)
+        {
+            var transactions = await context.Transactions
+                .Include(t => t.Label)
+                .Where(t => t.WalletId == wallet.Id)
+                .ToListAsync();
+
+            wallet.ExpensesBrl = transactions.Where(t => t.Type == TransactionType.EXPENSE).Sum(t => t.ValueBrl);
+            wallet.IncomesBrl = transactions.Where(t => t.Type == TransactionType.INCOME).Sum(t => t.ValueBrl);
+            return await PutAsync(wallet);
         }
     }
 }

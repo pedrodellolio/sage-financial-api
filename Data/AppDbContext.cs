@@ -57,9 +57,9 @@ namespace SageFinancialAPI.Data
 
             // Configuração do relacionamento muitos-para-muitos entre Transaction e Label
             modelBuilder.Entity<Transaction>()
-                .HasMany(t => t.Labels)
-                .WithMany(l => l.Transactions)
-                .UsingEntity(j => j.ToTable("TransactionLabels"));
+                .HasOne(t => t.Label)
+                .WithMany(f => f.Transactions)
+                .HasForeignKey(t => t.LabelId);
 
             // Relação: BudgetGoals são associadas a um único Budget
             modelBuilder.Entity<BudgetGoal>()

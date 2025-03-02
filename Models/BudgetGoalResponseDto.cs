@@ -2,13 +2,13 @@ using SageFinancialAPI.Entities;
 
 namespace SageFinancialAPI.Models
 {
-    public class BudgetGoalDto
+    public class BudgetGoalResponseDto
     {
-        public Guid Id { get; set; }
         public int Value { get; set; }
         public BudgetGoalType Type { get; set; }
-        public LabelDto Label { get; set; } = default!;
+        public Guid LabelId { get; set; }
         public int Month { get; set; }
         public int Year { get; set; }
+        public decimal AmountBrl { get; set; }
     }
 }

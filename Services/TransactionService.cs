@@ -1,30 +1,59 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using SageFinancialAPI.Data;
 using SageFinancialAPI.Entities;
 using SageFinancialAPI.Models;
 
 namespace SageFinancialAPI.Services
 {
-    public class TransactionService(AppDbContext context, IWalletService walletService, ILabelService labelService) : ITransactionService
+    public class TransactionService(AppDbContext context, IWalletService walletService) : ITransactionService
     {
         public async Task<Transaction?> GetAsync(Guid transactionId)
         {
-            return await context.Transactions.FindAsync(transactionId);
+            return await context.Transactions
+                .Include(t => t.Label)
+                .FirstOrDefaultAsync(t => t.Id == transactionId);
+        }
+
+        public async Task<ICollection<Transaction>> GetAllByWalletAsync(Guid walletId)
+        {
+            return await context.Transactions
+                .Include(t => t.Label)
+                .Where(t => t.WalletId == walletId)
+                .ToListAsync();
         }
 
         public async Task<ICollection<Transaction>> GetAllAsync(Guid profileId)
         {
-            return await context.Transactions.Where(t => t.Wallet.ProfileId == profileId).OrderByDescending(t => t.OccurredAt).ToListAsync();
+            return await context.Transactions
+                .Include(t => t.Label)
+                .Where(t => t.Wallet.ProfileId == profileId)
+                .OrderByDescending(t => t.OccurredAt)
+                .ToListAsync();
         }
 
-        public async Task<ICollection<Transaction>> GetByMonthAndYearAsync(int month, int year, Guid profileId)
+        public async Task<ICollection<Transaction>> GetAllByMonthAndYearLabelAsync(int month, int year, Guid labelId, Guid profileId, TransactionType? type = null)
         {
             return await context.Transactions
-                .Where(t => t.CreatedAt.Month == month && t.CreatedAt.Year == year && t.Wallet.ProfileId == profileId)
+                .Include(t => t.Label)
+                .Include(t => t.Wallet)
+                .Where(t => t.Label != null &&
+                            t.Label.Id == labelId &&
+                            t.OccurredAt.Month == month &&
+                            t.OccurredAt.Year == year &&
+                            t.Wallet.ProfileId == profileId &&
+                            (type == null || t.Type == type))
+                .OrderByDescending(t => t.OccurredAt)
+                .ToListAsync();
+        }
+
+        public async Task<ICollection<Transaction>> GetAllByMonthAndYearAsync(int month, int year, Guid profileId)
+        {
+            return await context.Transactions
+                .Include(t => t.Label)
+                .Where(t => t.OccurredAt.Month == month &&
+                            t.OccurredAt.Year == year &&
+                            t.Wallet.ProfileId == profileId)
                 .OrderByDescending(t => t.OccurredAt)
                 .ToListAsync();
         }
@@ -33,8 +62,8 @@ namespace SageFinancialAPI.Services
         {
             return await context.Transactions
                 .Where(t =>
-                    t.CreatedAt > start &&
-                    t.CreatedAt < end &&
+                    t.OccurredAt > start &&
+                    t.OccurredAt < end &&
                     t.Wallet.ProfileId == profileId &&
                     (type == null || t.Type == type)
                 )
@@ -53,17 +82,9 @@ namespace SageFinancialAPI.Services
                 ValueBrl = request.ValueBrl,
                 OccurredAt = request.OccurredAt,
                 WalletId = wallet.Id,
+                LabelId = request.Label?.Id
             };
 
-            var labels = new List<Label>();
-            foreach (var labelId in request.Labels)
-            {
-                var label = await labelService.GetAsync(labelId);
-                if (label != null)
-                    labels.Add(label);
-            }
-
-            newTransaction.Labels = labels;
             context.Transactions.Add(newTransaction);
             await context.SaveChangesAsync();
             return newTransaction;
@@ -72,7 +93,6 @@ namespace SageFinancialAPI.Services
         public async Task<Transaction> PutAsync(Transaction transaction, decimal oldValue)
         {
             await walletService.IncrementAsync(transaction, oldValue);
-
             context.Transactions.Update(transaction);
             await context.SaveChangesAsync();
             return transaction;

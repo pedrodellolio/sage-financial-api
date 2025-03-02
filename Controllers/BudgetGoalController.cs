@@ -3,6 +3,7 @@ using SageFinancialAPI.Entities;
 using Microsoft.AspNetCore.Authorization;
 using SageFinancialAPI.Models;
 using SageFinancialAPI.Services;
+using Newtonsoft.Json;
 
 namespace SageFinancialAPI.Controllers
 {
@@ -68,6 +69,7 @@ namespace SageFinancialAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<BudgetGoal>> Post(BudgetGoalDto request)
         {
+            Console.WriteLine(JsonConvert.SerializeObject(request));
             try
             {
                 BudgetGoal budgetGoal = await budgetGoalService.PostAsync(request, ProfileId);
@@ -77,15 +79,17 @@ namespace SageFinancialAPI.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return BadRequest("Ocorreu um erro inesperado.");
             }
         }
 
         [HttpPut]
-        public async Task<ActionResult<BudgetGoal>> Put(BudgetGoalUpdateDto request)
+        public async Task<ActionResult<BudgetGoal>> Put(BudgetGoalDto request)
         {
+            Console.WriteLine(request);
             try
             {
                 var budgetGoalDb = await budgetGoalService.GetAsync(request.Id);
@@ -94,7 +98,7 @@ namespace SageFinancialAPI.Controllers
 
                 budgetGoalDb.Value = request.Value;
                 budgetGoalDb.Type = request.Type;
-                budgetGoalDb.LabelId = request.LabelId;
+                budgetGoalDb.LabelId = request.Label.Id;
 
                 var budgetGoal = await budgetGoalService.PutAsync(budgetGoalDb);
                 return Ok(budgetGoal);
@@ -103,8 +107,9 @@ namespace SageFinancialAPI.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return BadRequest("Ocorreu um erro inesperado.");
             }
         }

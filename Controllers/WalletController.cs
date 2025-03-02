@@ -72,7 +72,7 @@ namespace SageFinancialAPI.Controllers
             {
                 var walletDb = await walletService.GetByMonthAndYearAsync(request.Month, request.Year, ProfileId);
                 if (walletDb is not null)
-                    return Conflict("Já existe uma Wallet com esse título.");
+                    return Conflict("Já existe uma Wallet para esse período.");
 
                 Wallet wallet = await walletService.PostAsync(request.Month, request.Year, ProfileId);
                 return Ok(wallet);
@@ -123,6 +123,28 @@ namespace SageFinancialAPI.Controllers
 
                 var deleted = await walletService.DeleteAsync(walletDb);
                 return Ok(deleted);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return BadRequest("Ocorreu um erro inesperado.");
+            }
+        }
+
+        [HttpPatch("sync")]
+        public async Task<ActionResult<Wallet>> Sync([FromBody] PeriodDto request)
+        {
+            try
+            {
+                var walletDb = await walletService.GetByMonthAndYearAsync(request.Month, request.Year, ProfileId);
+                if (walletDb is null)
+                    return NotFound("Wallet não encontrada.");
+
+                var patched = await walletService.PatchAsync(walletDb);
+                return Ok(patched);
             }
             catch (ApplicationException ex)
             {

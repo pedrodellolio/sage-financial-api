@@ -13,5 +13,6 @@ namespace SageFinancialAPI.Services
         Task<Wallet> PutAsync(Wallet wallet);
         Task<Wallet?> IncrementAsync(Transaction transaction, decimal oldValue);
         Task<bool> DeleteAsync(Wallet Wallet);
+        Task<Wallet> PatchAsync(Wallet wallet);
     }
 }
