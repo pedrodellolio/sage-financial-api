@@ -16,9 +16,14 @@ namespace SageFinancialAPI.Services
             return await context.Profiles.FirstOrDefaultAsync(p => p.Id == profileId && p.IsActive);
         }
 
+        public async Task<Profile?> GetDefaultAsync(Guid userId)
+        {
+            return await context.Profiles.FirstOrDefaultAsync(p => p.UserId == userId && p.IsActive && p.IsDefault);
+        }
+
         public async Task<Profile?> GetByTitleAsync(string title)
         {
-            return await context.Profiles.FirstOrDefaultAsync(p => p.Title.Equals(title.Trim(), StringComparison.CurrentCultureIgnoreCase) && p.IsActive);
+            return await context.Profiles.FirstOrDefaultAsync(p => p.Title == title.Trim().ToUpper() && p.IsActive);
         }
 
         public async Task<ICollection<Profile>> GetAllAsync(Guid userId)
@@ -30,7 +35,7 @@ namespace SageFinancialAPI.Services
         {
             var newProfile = new Profile
             {
-                Title = request.Title.Trim().ToUpper(),
+                Title = request.Title,
                 UserId = userId
             };
 

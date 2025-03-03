@@ -18,9 +18,9 @@ namespace SageFinancialAPI.Data
         {
             // Relação: Um usuário (User) pode ter vários perfis (Profile)
             modelBuilder.Entity<Profile>()
-                .HasOne(p => p.User)           // Cada Profile tem um User associado
-                .WithMany(u => u.Profiles)     // Cada User pode ter muitos Profiles
-                .HasForeignKey(p => p.UserId); // Chave estrangeira em Profile
+                .HasOne(p => p.User)
+                .WithMany(u => u.Profiles)
+                .HasForeignKey(p => p.UserId); 
 
             // Relação: Wallets, Labels, Budgets e Files são associados a um único Profile
             modelBuilder.Entity<Wallet>()
@@ -80,7 +80,7 @@ namespace SageFinancialAPI.Data
 
             // Index único UserId + Título
             modelBuilder.Entity<Wallet>()
-                    .HasIndex(w => new { w.Month, w.Year })
+                    .HasIndex(w => new { w.Month, w.Year, w.ProfileId })
                     .IsUnique();
 
             modelBuilder.Entity<User>()

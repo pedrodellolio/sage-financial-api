@@ -23,7 +23,7 @@ namespace SageFinancialAPI.Services
 
         public async Task<Wallet?> GetByMonthAndYearAsync(int month, int year, Guid profileId)
         {
-            var wallet = await context.Wallets.FirstOrDefaultAsync(w => w.Month == month && w.Year == year);
+            var wallet = await context.Wallets.FirstOrDefaultAsync(w => w.Month == month && w.Year == year && w.ProfileId == profileId);
             if (wallet is null && month != 0 && year != 0)
                 wallet = await PostAsync(month, year, profileId);
             return wallet;

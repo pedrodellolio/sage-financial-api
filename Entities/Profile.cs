@@ -4,8 +4,14 @@ namespace SageFinancialAPI.Entities
 {
     public class Profile : BaseEntity
     {
-        public string Title { get; set; } = string.Empty;
+        private string _title = string.Empty;
+        public string Title
+        {
+            get => _title;
+            set => _title = value.Trim().ToUpper();
+        }
         public bool IsActive { get; set; } = true;
+        public bool IsDefault { get; set; } = false;
         [JsonIgnore]
         public ICollection<Wallet> Wallets { get; set; } = [];
         [JsonIgnore]

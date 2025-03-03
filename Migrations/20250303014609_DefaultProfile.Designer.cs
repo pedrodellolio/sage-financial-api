@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SageFinancialAPI.Data;
@@ -11,9 +12,11 @@ using SageFinancialAPI.Data;
 namespace SageFinancialAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250303014609_DefaultProfile")]
+    partial class DefaultProfile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -259,7 +262,7 @@ namespace SageFinancialAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("Month", "Year", "ProfileId")
+                    b.HasIndex("Month", "Year")
                         .IsUnique();
 
                     b.ToTable("Wallets");

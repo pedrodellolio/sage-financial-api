@@ -4,7 +4,13 @@ namespace SageFinancialAPI.Entities
 {
     public class Transaction : BaseEntity
     {
-        public string Title { get; set; } = string.Empty;
+        private string _title = string.Empty;
+        public string Title
+        {
+            get => _title;
+            set => _title = value.Trim().ToUpper();
+        }
+
         public decimal ValueBrl { get; set; }
         public TransactionType Type { get; set; }
         public DateTime OccurredAt { get; set; }

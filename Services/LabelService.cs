@@ -47,8 +47,8 @@ namespace SageFinancialAPI.Services
             var newLabel = new Label
             {
                 Title = request.Title,
-                ColorHex = request.ColorHex,
-                IsDefault = request.IsDefault,
+                ColorHex = "#FFF",
+                ProfileId = profileId
             };
 
             context.Labels.Add(newLabel);

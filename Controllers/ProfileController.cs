@@ -11,12 +11,30 @@ namespace SageFinancialAPI.Controllers
     [Authorize]
     public class ProfileController(IProfileService profileService) : BaseController
     {
-        [HttpGet("{profileId}")]
-        public async Task<ActionResult<Profile?>> Get(Guid profileId)
+        [HttpGet]
+        public async Task<ActionResult<Profile?>> Get()
         {
             try
             {
-                var result = await profileService.GetAsync(profileId);
+                var result = await profileService.GetAsync(ProfileId);
+                return Ok(result);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return BadRequest("Ocorreu um erro inesperado.");
+            }
+        }
+
+         [HttpGet("default")]
+        public async Task<ActionResult<Profile?>> GetDefault()
+        {
+            try
+            {
+                var result = await profileService.GetDefaultAsync(UserId);
                 return Ok(result);
             }
             catch (ApplicationException ex)
@@ -63,8 +81,9 @@ namespace SageFinancialAPI.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return BadRequest("Ocorreu um erro inesperado.");
             }
         }
@@ -92,11 +111,11 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpDelete("{profileId}")]
-        public async Task<ActionResult<bool>> Delete(Guid profileId)
+        public async Task<ActionResult<bool>> Delete()
         {
             try
             {
-                var profileDb = await profileService.GetAsync(profileId);
+                var profileDb = await profileService.GetAsync(ProfileId);
                 if (profileDb is null)
                     return NotFound("Profile não encontrada.");
 

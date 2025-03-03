@@ -82,9 +82,6 @@ namespace SageFinancialAPI.Controllers
                     return NotFound("Label não encontrada.");
 
                 labelDb.Title = request.Title;
-                labelDb.ColorHex = request.ColorHex;
-                labelDb.IsActive = request.IsActive;
-
                 var label = await labelService.PutAsync(labelDb);
                 return Ok(label);
             }
