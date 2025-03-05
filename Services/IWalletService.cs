@@ -7,6 +7,7 @@ namespace SageFinancialAPI.Services
     {
         Task<Wallet?> GetAsync(Guid WalletId);
         Task<ICollection<Wallet>> GetAllAsync(Guid profileId);
+        Task<ICollection<Wallet>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId);
         Task<Wallet?> GetByMonthAndYearAsync(int month, int year, Guid profileId);
         Task<Wallet> PostAsync(int month, int year, Guid profileId);
         Task<Wallet> CreateOrUpdateAsync(TransactionDto request, Guid profileId);

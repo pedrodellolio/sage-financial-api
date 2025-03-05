@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using SageFinancialAPI.Data;
 using SageFinancialAPI.Entities;
+using SageFinancialAPI.Extensions;
 using SageFinancialAPI.Models;
 
 namespace SageFinancialAPI.Services
@@ -10,31 +11,36 @@ namespace SageFinancialAPI.Services
     {
         public async Task<Transaction?> GetAsync(Guid transactionId)
         {
-            return await context.Transactions
+            var transaction = await context.Transactions
                 .Include(t => t.Label)
                 .FirstOrDefaultAsync(t => t.Id == transactionId);
+            return transaction;
         }
 
         public async Task<ICollection<Transaction>> GetAllByWalletAsync(Guid walletId)
         {
-            return await context.Transactions
+            var transactions = await context.Transactions
                 .Include(t => t.Label)
                 .Where(t => t.WalletId == walletId)
                 .ToListAsync();
+
+            return transactions;
         }
 
         public async Task<ICollection<Transaction>> GetAllAsync(Guid profileId)
         {
-            return await context.Transactions
+            var transactions = await context.Transactions
                 .Include(t => t.Label)
                 .Where(t => t.Wallet.ProfileId == profileId)
                 .OrderByDescending(t => t.OccurredAt)
                 .ToListAsync();
+
+            return transactions;
         }
 
         public async Task<ICollection<Transaction>> GetAllByMonthAndYearLabelAsync(int month, int year, Guid labelId, Guid profileId, TransactionType? type = null)
         {
-            return await context.Transactions
+            var transactions = await context.Transactions
                 .Include(t => t.Label)
                 .Include(t => t.Wallet)
                 .Where(t => t.Label != null &&
@@ -45,22 +51,27 @@ namespace SageFinancialAPI.Services
                             (type == null || t.Type == type))
                 .OrderByDescending(t => t.OccurredAt)
                 .ToListAsync();
+
+            return transactions;
         }
 
         public async Task<ICollection<Transaction>> GetAllByMonthAndYearAsync(int month, int year, Guid profileId)
         {
-            return await context.Transactions
+            var transactions = await context.Transactions
                 .Include(t => t.Label)
                 .Where(t => t.OccurredAt.Month == month &&
                             t.OccurredAt.Year == year &&
                             t.Wallet.ProfileId == profileId)
                 .OrderByDescending(t => t.OccurredAt)
                 .ToListAsync();
+
+            return transactions;
         }
 
         public async Task<ICollection<Transaction>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId, TransactionType? type = null)
         {
-            return await context.Transactions
+            var transactions = await context.Transactions
+                .Include(t => t.Label)
                 .Where(t =>
                     t.OccurredAt > start &&
                     t.OccurredAt < end &&
@@ -69,6 +80,8 @@ namespace SageFinancialAPI.Services
                 )
                 .OrderByDescending(t => t.OccurredAt)
                 .ToListAsync();
+
+            return transactions;
         }
 
 

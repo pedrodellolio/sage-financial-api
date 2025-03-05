@@ -5,6 +5,7 @@ using SageFinancialAPI.Models;
 using SageFinancialAPI.Services;
 using System.Security.Claims;
 using Newtonsoft.Json;
+using SageFinancialAPI.Extensions;
 
 namespace SageFinancialAPI.Controllers
 {
@@ -14,7 +15,7 @@ namespace SageFinancialAPI.Controllers
     public class TransactionController(ITransactionService transactionService) : BaseController
     {
         [HttpGet("{transactionId}")]
-        public async Task<ActionResult<Transaction?>> Get(Guid transactionId)
+        public async Task<ActionResult<Transaction>> Get(Guid transactionId)
         {
             try
             {
@@ -109,7 +110,7 @@ namespace SageFinancialAPI.Controllers
         {
             try
             {
-                Transaction transaction = await transactionService.PostAsync(request, ProfileId);
+                var transaction = await transactionService.PostAsync(request, ProfileId);
                 return Ok(transaction);
             }
             catch (ApplicationException ex)
@@ -136,16 +137,20 @@ namespace SageFinancialAPI.Controllers
                 transactionDb.Title = request.Title;
                 transactionDb.Type = request.Type;
                 transactionDb.ValueBrl = request.ValueBrl;
+                transactionDb.OccurredAt = request.OccurredAt;
+                transactionDb.LabelId = request.Label?.Id;
 
                 var transaction = await transactionService.PutAsync(transactionDb, oldValue);
                 return Ok(transaction);
             }
             catch (ApplicationException ex)
             {
+                Console.WriteLine(ex.Message);
                 return BadRequest(ex.Message);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return BadRequest("Ocorreu um erro inesperado.");
             }
         }
@@ -164,10 +169,12 @@ namespace SageFinancialAPI.Controllers
             }
             catch (ApplicationException ex)
             {
+                Console.WriteLine(ex.Message);
                 return BadRequest(ex.Message);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex.Message);
                 return BadRequest("Ocorreu um erro inesperado.");
             }
         }

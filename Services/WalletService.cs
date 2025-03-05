@@ -21,6 +21,22 @@ namespace SageFinancialAPI.Services
             return await context.Wallets.Where(w => w.ProfileId == profileId).ToListAsync();
         }
 
+
+        public async Task<ICollection<Wallet>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId)
+        {
+            var transactions = await context.Wallets
+                .Where(w =>
+                   w.ProfileId == profileId &&
+                   new DateTime(w.Year, w.Month, 1) >= new DateTime(start.Year, start.Month, 1) &&
+                   new DateTime(w.Year, w.Month, 1) <= new DateTime(end.Year, end.Month, 1)
+                )
+                .OrderBy(w => w.Year)
+                .ThenBy(w => w.Month)
+                .ToListAsync();
+
+            return transactions;
+        }
+
         public async Task<Wallet?> GetByMonthAndYearAsync(int month, int year, Guid profileId)
         {
             var wallet = await context.Wallets.FirstOrDefaultAsync(w => w.Month == month && w.Year == year && w.ProfileId == profileId);

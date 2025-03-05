@@ -69,7 +69,6 @@ namespace SageFinancialAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<BudgetGoal>> Post(BudgetGoalDto request)
         {
-            Console.WriteLine(JsonConvert.SerializeObject(request));
             try
             {
                 BudgetGoal budgetGoal = await budgetGoalService.PostAsync(request, ProfileId);
@@ -89,7 +88,6 @@ namespace SageFinancialAPI.Controllers
         [HttpPut]
         public async Task<ActionResult<BudgetGoal>> Put(BudgetGoalDto request)
         {
-            Console.WriteLine(request);
             try
             {
                 var budgetGoalDb = await budgetGoalService.GetAsync(request.Id);

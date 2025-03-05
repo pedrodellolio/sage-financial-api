@@ -2,7 +2,7 @@ using SageFinancialAPI.Entities;
 
 namespace SageFinancialAPI.Models
 {
-    public class TransactionDto
+    public class TransactionResponseDto
     {
         public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
