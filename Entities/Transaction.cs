@@ -20,11 +20,23 @@ namespace SageFinancialAPI.Entities
         public File? File { get; set; } = null;
         public Guid? LabelId { get; set; }
         public Label? Label { get; set; } = null;
+        public RecurrenceType? Frequency { get; set; }
+        public int Installment { get; set; } = 0;
+        public int TotalInstallments { get; set; } = 0;
+        public Guid? ParentTransactionId { get; set; }
+        public Transaction? ParentTransaction { get; set; }
     }
 
     public enum TransactionType
     {
         EXPENSE,
         INCOME
+    }
+
+    public enum RecurrenceType
+    {
+        WEEKLY,
+        BIWEEKLY,
+        MONTHLY
     }
 }

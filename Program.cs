@@ -1,15 +1,23 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SageFinancialAPI.Data;
+using SageFinancialAPI.Jobs;
 using SageFinancialAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddHangfire(config =>
+    config.UseSimpleAssemblyNameTypeSerializer()
+          .UseRecommendedSerializerSettings()
+          .UsePostgreSqlStorage(c => c.UseNpgsqlConnection(builder.Configuration.GetConnectionString("Default")))
+);
+builder.Services.AddHangfireServer();
+
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -18,11 +26,6 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 
 builder.Services.AddOpenApi();
 
-// builder.Services.AddControllers().AddJsonOptions(options =>
-// {
-//     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
-// });
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("All", policy =>
@@ -30,6 +33,7 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
+
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
@@ -42,8 +46,6 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    // options.Authority = builder.Configuration["AppSettings:Authority"];
-    // options.Audience = builder.Configuration["AppSettings:Audience"];
     options.TokenValidationParameters = new TokenValidationParameters()
     {
         ValidateIssuer = true,
@@ -52,21 +54,10 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["AppSettings:Issuer"],
         ValidAudience = builder.Configuration["AppSettings:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Token"]!)),
-        // ValidateLifetime = true,
-        // ClockSkew = TimeSpan.Zero
     };
-
-    // options.Events = new JwtBearerEvents
-    // {
-    //     OnAuthenticationFailed = context =>
-    //     {
-    //         if (context.Exception is SecurityTokenExpiredException)
-    //             context.Response.Headers.Append("Token-Expired", "true");
-    //         return Task.CompletedTask;
-    //     }
-    // };
 });
 
+builder.Services.AddTransient<HelloWorldJob>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
@@ -84,6 +75,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseHangfireDashboard("/dashboard");
+using (var scope = app.Services.CreateScope())
+{
+    var helloWorldJob = scope.ServiceProvider.GetRequiredService<HelloWorldJob>();
+    await helloWorldJob.Execute();
+}
 
 app.UseCors("AllPolicy");
 app.UseAuthentication();

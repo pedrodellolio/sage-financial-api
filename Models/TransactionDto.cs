@@ -10,5 +10,6 @@ namespace SageFinancialAPI.Models
         public TransactionType Type { get; set; }
         public DateTimeOffset OccurredAt { get; set; }
         public LabelDto? Label { get; set; }
+        public RecurrenceType? Frequency { get; set; }
     }
 }

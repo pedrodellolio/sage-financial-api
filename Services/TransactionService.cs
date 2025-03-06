@@ -95,7 +95,8 @@ namespace SageFinancialAPI.Services
                 ValueBrl = request.ValueBrl,
                 OccurredAt = request.OccurredAt,
                 WalletId = wallet.Id,
-                LabelId = request.Label?.Id
+                LabelId = request.Label?.Id,
+                Frequency = request.Frequency
             };
 
             context.Transactions.Add(newTransaction);
