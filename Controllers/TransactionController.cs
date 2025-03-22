@@ -139,7 +139,8 @@ namespace SageFinancialAPI.Controllers
                 transactionDb.ValueBrl = request.ValueBrl;
                 transactionDb.OccurredAt = request.OccurredAt;
                 transactionDb.LabelId = request.Label?.Id;
-
+                transactionDb.Frequency = request.Frequency;
+                
                 var transaction = await transactionService.PutAsync(transactionDb, oldValue);
                 return Ok(transaction);
             }

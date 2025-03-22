@@ -65,6 +65,24 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
+        [HttpGet("all-profile-balance")]
+        public async Task<ActionResult<ICollection<ProfileBalanceDto>>> GetAllProfileBalance(int month, int year)
+        {
+            try
+            {
+                var result = await profileService.GetAllProfileBalanceAsync(month, year, UserId);
+                return Ok(result);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return BadRequest("Ocorreu um erro inesperado.");
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult<Profile>> Post(ProfileDto request)
         {

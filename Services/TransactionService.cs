@@ -7,7 +7,7 @@ using SageFinancialAPI.Models;
 
 namespace SageFinancialAPI.Services
 {
-    public class TransactionService(AppDbContext context, IWalletService walletService) : ITransactionService
+    public class TransactionService(AppDbContext context, IWalletService walletService, RecurringTransactionService recurringService) : ITransactionService
     {
         public async Task<Transaction?> GetAsync(Guid transactionId)
         {
@@ -101,6 +101,13 @@ namespace SageFinancialAPI.Services
 
             context.Transactions.Add(newTransaction);
             await context.SaveChangesAsync();
+
+            if (newTransaction.Frequency != null)
+            {
+                //Criar todas as transações até a data atual e agendar um job para as futuras
+                recurringService.ScheduleRecurringTransaction(newTransaction);
+            }
+
             return newTransaction;
         }
 
@@ -109,6 +116,12 @@ namespace SageFinancialAPI.Services
             await walletService.IncrementAsync(transaction, oldValue);
             context.Transactions.Update(transaction);
             await context.SaveChangesAsync();
+
+            if (transaction.Frequency != null)
+            {
+                //Criar todas as transações até a data atual e agendar um job para as futuras
+                recurringService.ScheduleRecurringTransaction(transaction);
+            }
             return transaction;
         }
 

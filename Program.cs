@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SageFinancialAPI.Data;
-using SageFinancialAPI.Jobs;
 using SageFinancialAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,7 +56,7 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddTransient<HelloWorldJob>();
+builder.Services.AddScoped<RecurringTransactionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
@@ -77,11 +76,11 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseHangfireDashboard("/dashboard");
-using (var scope = app.Services.CreateScope())
-{
-    var helloWorldJob = scope.ServiceProvider.GetRequiredService<HelloWorldJob>();
-    await helloWorldJob.Execute();
-}
+
+// RecurringJob.AddOrUpdate<RecurringTransactionService>(
+//     "RecurringTransactionJob",
+//     job => job.Process(),
+//     Cron.Hourly);
 
 app.UseCors("AllPolicy");
 app.UseAuthentication();
