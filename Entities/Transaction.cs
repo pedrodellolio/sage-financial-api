@@ -12,6 +12,7 @@ namespace SageFinancialAPI.Entities
         }
 
         public decimal ValueBrl { get; set; }
+        public decimal InterestPercentage { get; set; }
         public TransactionType Type { get; set; }
         public DateTimeOffset OccurredAt { get; set; }
         public Guid WalletId { get; set; }
@@ -37,6 +38,7 @@ namespace SageFinancialAPI.Entities
     {
         WEEKLY,
         BIWEEKLY,
-        MONTHLY
+        MONTHLY,
+        YEARLY
     }
 }

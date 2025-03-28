@@ -56,7 +56,6 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddScoped<RecurringTransactionService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
@@ -76,11 +75,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseHangfireDashboard("/dashboard");
-
-// RecurringJob.AddOrUpdate<RecurringTransactionService>(
-//     "RecurringTransactionJob",
-//     job => job.Process(),
-//     Cron.Hourly);
 
 app.UseCors("AllPolicy");
 app.UseAuthentication();

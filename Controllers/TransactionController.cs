@@ -106,12 +106,12 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Transaction>> Post(TransactionDto request)
+        public async Task<ActionResult<bool>> Post(TransactionDto request)
         {
             try
             {
-                var transaction = await transactionService.PostAsync(request, ProfileId);
-                return Ok(transaction);
+                var created = await transactionService.PostAsync(request, ProfileId);
+                return Ok(created);
             }
             catch (ApplicationException ex)
             {
@@ -125,7 +125,7 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult<Transaction>> Put(TransactionUpdateDto request)
+        public async Task<ActionResult<bool>> Put(TransactionUpdateDto request)
         {
             try
             {
@@ -133,25 +133,15 @@ namespace SageFinancialAPI.Controllers
                 if (transactionDb is null)
                     return NotFound("Transaction não encontrada.");
 
-                var oldValue = transactionDb.ValueBrl;
-                transactionDb.Title = request.Title;
-                transactionDb.Type = request.Type;
-                transactionDb.ValueBrl = request.ValueBrl;
-                transactionDb.OccurredAt = request.OccurredAt;
-                transactionDb.LabelId = request.Label?.Id;
-                transactionDb.Frequency = request.Frequency;
-                
-                var transaction = await transactionService.PutAsync(transactionDb, oldValue);
-                return Ok(transaction);
+                var updated = await transactionService.PutAsync(request, transactionDb);
+                return Ok(updated);
             }
             catch (ApplicationException ex)
             {
-                Console.WriteLine(ex.Message);
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
                 return BadRequest("Ocorreu um erro inesperado.");
             }
         }
