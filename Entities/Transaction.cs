@@ -21,6 +21,8 @@ namespace SageFinancialAPI.Entities
         public File? File { get; set; } = null;
         public Guid? LabelId { get; set; }
         public Label? Label { get; set; } = null;
+        public Guid? NotificationId { get; set; }
+        public Notification? Notification { get; set; } = null;
         public RecurrenceType? Frequency { get; set; }
         public int Installment { get; set; } = 0;
         public int TotalInstallments { get; set; } = 0;

@@ -13,7 +13,7 @@ namespace SageFinancialAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController(IAuthService authService) : ControllerBase
+    public class AuthController(IAuthService authService) : BaseController
     {
         // [HttpPost("login")]
         // public async Task<ActionResult<TokenResponseDto>> Login(UserDto request)

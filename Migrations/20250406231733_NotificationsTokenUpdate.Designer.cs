@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SageFinancialAPI.Data;
@@ -11,9 +12,11 @@ using SageFinancialAPI.Data;
 namespace SageFinancialAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250406231733_NotificationsTokenUpdate")]
+    partial class NotificationsTokenUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -133,34 +136,6 @@ namespace SageFinancialAPI.Migrations
                     b.ToTable("Labels");
                 });
 
-            modelBuilder.Entity("SageFinancialAPI.Entities.Notification", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("ProfileId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TransactionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("TriggerDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProfileId");
-
-                    b.HasIndex("TransactionId")
-                        .IsUnique();
-
-                    b.ToTable("Notifications");
-                });
-
             modelBuilder.Entity("SageFinancialAPI.Entities.Profile", b =>
                 {
                     b.Property<Guid>("Id")
@@ -213,9 +188,6 @@ namespace SageFinancialAPI.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<Guid?>("LabelId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("NotificationId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("OccurredAt")
@@ -369,25 +341,6 @@ namespace SageFinancialAPI.Migrations
                     b.Navigation("Profile");
                 });
 
-            modelBuilder.Entity("SageFinancialAPI.Entities.Notification", b =>
-                {
-                    b.HasOne("SageFinancialAPI.Entities.Profile", "Profile")
-                        .WithMany()
-                        .HasForeignKey("ProfileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("SageFinancialAPI.Entities.Transaction", "Transaction")
-                        .WithOne("Notification")
-                        .HasForeignKey("SageFinancialAPI.Entities.Notification", "TransactionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Profile");
-
-                    b.Navigation("Transaction");
-                });
-
             modelBuilder.Entity("SageFinancialAPI.Entities.Profile", b =>
                 {
                     b.HasOne("SageFinancialAPI.Entities.User", "User")
@@ -469,11 +422,6 @@ namespace SageFinancialAPI.Migrations
                     b.Navigation("Labels");
 
                     b.Navigation("Wallets");
-                });
-
-            modelBuilder.Entity("SageFinancialAPI.Entities.Transaction", b =>
-                {
-                    b.Navigation("Notification");
                 });
 
             modelBuilder.Entity("SageFinancialAPI.Entities.User", b =>

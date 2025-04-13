@@ -13,6 +13,7 @@ namespace SageFinancialAPI.Data
         public DbSet<Entities.File> Files { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<BudgetGoal> BudgetGoals { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -60,6 +61,11 @@ namespace SageFinancialAPI.Data
                 .HasOne(t => t.Label)
                 .WithMany(f => f.Transactions)
                 .HasForeignKey(t => t.LabelId);
+
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Notification)
+                .WithOne(n => n.Transaction)
+                .HasForeignKey<Notification>(n => n.TransactionId);
 
             // Relação: BudgetGoals são associadas a um único Budget
             modelBuilder.Entity<BudgetGoal>()

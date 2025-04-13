@@ -52,6 +52,30 @@ namespace SageFinancialAPI.Services
             return user;
         }
 
+        public async Task<User?> GetAsync(Guid userId)
+        {
+            return await context.Users.FindAsync(userId);
+        }
+
+        public async Task<User?> GetByProfileIdAsync(Guid profileId)
+        {
+            return await context.Users
+                .Include(u => u.Profiles)
+                .FirstOrDefaultAsync(u => u.Profiles.Any(p => p.Id == profileId));
+        }
+
+        public async Task<User> SaveNotificationTokenAsync(string token, Guid userId)
+        {
+            var user = await GetAsync(userId);
+            if (user is null)
+                throw new ApplicationException("Usuário não encontrado");
+
+            user.PushNotificationsToken = token;
+            context.Users.Update(user);
+            await context.SaveChangesAsync();
+            return user;
+        }
+
         // private string CreateToken(User user)
         // {
         //     var claims = new List<Claim>{

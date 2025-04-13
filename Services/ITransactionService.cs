@@ -10,7 +10,7 @@ namespace SageFinancialAPI.Services
         Task<ICollection<Transaction>> GetAllAsync(Guid profileId);
         Task<ICollection<Transaction>> GetAllByWalletAsync(Guid walletId);
         Task<ICollection<Entities.Transaction>> GetAllInstallmentsAsync(Guid transactionId);
-        Task<ICollection<Transaction>> GetAllByMonthAndYearAsync(int month, int year, Guid profileId);
+        Task<ICollection<Transaction>> GetAllByMonthAndYearAsync(int month, int year, Guid profileId, string? input = null, TransactionFiltersDto? filters = null);
         Task<ICollection<Transaction>> GetAllByMonthAndYearLabelAsync(int month, int year, Guid labelId, Guid profileId, TransactionType? type);
         Task<ICollection<Transaction>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId, TransactionType? type = null);
         Task<bool> PostAsync(TransactionDto request, Guid profileId, bool scheduleRecurrence = true);

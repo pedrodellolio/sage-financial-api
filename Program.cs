@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SageFinancialAPI.Data;
 using SageFinancialAPI.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddHangfire(config =>
@@ -63,6 +62,7 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IBudgetGoalService, BudgetGoalService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 var app = builder.Build();
 

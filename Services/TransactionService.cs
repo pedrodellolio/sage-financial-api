@@ -4,11 +4,13 @@ using SageFinancialAPI.Data;
 using SageFinancialAPI.Entities;
 using SageFinancialAPI.Extensions;
 using SageFinancialAPI.Models;
+using System;
 using System.Transactions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace SageFinancialAPI.Services
 {
-    public class TransactionService(AppDbContext context, IWalletService walletService) : ITransactionService
+    public class TransactionService(AppDbContext context, IWalletService walletService, INotificationService notificationService) : ITransactionService
     {
         #region Query Methods
 
@@ -60,15 +62,38 @@ namespace SageFinancialAPI.Services
                 .ToListAsync();
         }
 
-        public async Task<ICollection<Entities.Transaction>> GetAllByMonthAndYearAsync(int month, int year, Guid profileId)
+        public async Task<ICollection<Entities.Transaction>> GetAllByMonthAndYearAsync(int month, int year, Guid profileId, string? input = null, TransactionFiltersDto? filters = null)
         {
-            return await context.Transactions
+            var query = context.Transactions
                 .Include(t => t.Label)
                 .Where(t => t.OccurredAt.Month == month &&
                             t.OccurredAt.Year == year &&
-                            t.Wallet.ProfileId == profileId)
-                .OrderByDescending(t => t.OccurredAt)
-                .ToListAsync();
+                            t.Wallet.ProfileId == profileId);
+
+            if (!string.IsNullOrEmpty(input))
+                query = query.Where(t => t.Title.StartsWith(input.ToUpper()));
+
+            if (filters is not null)
+            {
+                if (filters.OnlyInstallment)
+                    query = query.Where(t => t.TotalInstallments > 0);
+
+                if (filters.OnlyRecurrent)
+                    query = query.Where(t => t.Frequency != null);
+
+                if (filters.MinValue.HasValue)
+                    query = query.Where(t => t.ValueBrl >= filters.MinValue);
+
+                if (filters.MaxValue.HasValue)
+                    query = query.Where(t => t.ValueBrl <= filters.MinValue);
+
+                //if (filters.LabelIds.Count != 0)
+                //    query = query.Where(t => t.LabelId.HasValue && filters.LabelIds.Contains(t.LabelId.Value));
+            }
+
+            return await query
+                    .OrderByDescending(t => t.OccurredAt)
+                    .ToListAsync();
         }
 
         public async Task<ICollection<Entities.Transaction>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId, TransactionType? type = null)
@@ -101,6 +126,7 @@ namespace SageFinancialAPI.Services
                     await ProcessSingleTransactionAsync(request, profileId, installment: 1, scheduleRecurrence: scheduleRecurrence);
                     await context.SaveChangesAsync();
                 }
+
             });
         }
 
@@ -171,6 +197,21 @@ namespace SageFinancialAPI.Services
             await PostAsync(newTransaction, originalTransaction.Wallet.ProfileId, scheduleRecurrence: newTransaction.ParentTransactionId != null);
         }
 
+        [AutomaticRetry(Attempts = 3)]
+        public async Task ProcessRecurringNotification(TransactionDto originalTransaction, Guid profileId)
+        {
+            var _originalTransaction = await GetAsync(originalTransaction.Id);
+            if (_originalTransaction == null || _originalTransaction.Frequency == null)
+                return;
+
+            var tipo = _originalTransaction.Type == TransactionType.EXPENSE ? "pagamento" : "recebimento";
+            // Schedule notifications to alert the user when a goal's limit is reached
+            await notificationService.SendNotificationByProfileAsync(
+                profileId,
+                $"Seu próximo {tipo} está próximo!",
+                $" Fique atento! O {tipo}: {originalTransaction.Title.Trim()} está agendado para amanhã");
+        }
+
         #endregion
 
         #region Deletion Methods
@@ -199,7 +240,7 @@ namespace SageFinancialAPI.Services
 
         #region Recurring Transactions
 
-        private void ScheduleRecurringTransaction(Entities.Transaction transaction)
+        private void ScheduleRecurringTransaction(TransactionDto transaction)
         {
             try
             {
@@ -221,7 +262,69 @@ namespace SageFinancialAPI.Services
                         cronExpression);
                 }
             }
-            catch (Exception ex)
+            catch
+            {
+                throw;
+            }
+        }
+
+        private void ScheduleNotification(TransactionDto transaction, Guid profileId)
+        {
+            try
+            {
+                var id = transaction.ParentTransactionId ?? transaction.Id;
+                string jobId = $"Notification-{id}";
+                string cronExpression = string.Empty;
+                DateTimeOffset notificationDate = DateTime.Now;
+                switch (transaction.Frequency)
+                {
+                    case RecurrenceType.WEEKLY:
+                        int transactionDayOfWeek = (int)transaction.OccurredAt.DayOfWeek;
+                        int notificationDayOfWeek = (transactionDayOfWeek + 6) % 7;
+                        cronExpression = $"0 0 * * {notificationDayOfWeek}";
+
+                        // Calcular a próxima data da notificação
+                        notificationDate = transaction.OccurredAt.AddDays(-1);
+                        break;
+
+                    case RecurrenceType.MONTHLY:
+                        int transactionDay = transaction.OccurredAt.Day;
+                        int notificationDay = transactionDay - 1;
+                        if (notificationDay < 1)
+                        {
+                            notificationDay = 28;
+                        }
+
+                        cronExpression = $"0 0 {notificationDay} * *";
+
+                        // Calcular a data de notificação para o mês da transação
+                        notificationDate = new DateTimeOffset(transaction.OccurredAt.Year, transaction.OccurredAt.Month, notificationDay, 0, 0, 0, TimeSpan.Zero);
+                        break;
+
+                    case RecurrenceType.YEARLY:
+                        notificationDate = transaction.OccurredAt.AddDays(-1);
+                        int day = notificationDate.Day;
+                        int month = notificationDate.Month;
+                        cronExpression = $"0 0 {day} {month} *";
+                        break;
+                }
+
+                context.Notifications.Add(new Notification
+                {
+                    TransactionId = id,
+                    ProfileId = profileId,
+                    TriggerDate = notificationDate
+                });
+
+                if (!string.IsNullOrEmpty(cronExpression))
+                {
+                    RecurringJob.AddOrUpdate(
+                        jobId,
+                        () => ProcessRecurringNotification(transaction, profileId),
+                        cronExpression);
+                }
+            }
+            catch
             {
                 throw;
             }
@@ -229,16 +332,19 @@ namespace SageFinancialAPI.Services
 
         private static void RemoveScheduledJobs(Guid transactionId)
         {
-            string jobId = $"RecurringTransaction-{transactionId}";
-            RecurringJob.RemoveIfExists(jobId);
+            string transactionJobId = $"RecurringTransaction-{transactionId}";
+            string notificationJobId = $"Notification-{transactionId}";
+
+            RecurringJob.RemoveIfExists(transactionJobId);
+            RecurringJob.RemoveIfExists(notificationJobId);
         }
 
-
-        private void ScheduleRecurringIfNeeded(Entities.Transaction transaction)
+        private void ScheduleRecurringIfNeeded(TransactionDto transaction, Guid profileId)
         {
             if (transaction.Frequency != null)
             {
                 ScheduleRecurringTransaction(transaction);
+                ScheduleNotification(transaction, profileId);
             }
         }
 
@@ -248,12 +354,22 @@ namespace SageFinancialAPI.Services
 
         private async Task<Entities.Transaction> ProcessSingleTransactionAsync(TransactionDto request, Guid profileId, int installment, Guid? parentId = null, bool scheduleRecurrence = true)
         {
+            try
+            {
+
             Wallet wallet = await walletService.CreateOrUpdateAsync(request, profileId);
             Entities.Transaction newTransaction = BuildTransaction(request, wallet, installment, parentId);
             context.Transactions.Add(newTransaction);
+            request.ParentTransactionId = newTransaction.ParentTransactionId;
+            request.Id = newTransaction.Id;
             if (scheduleRecurrence)
-                ScheduleRecurringIfNeeded(newTransaction);
+                ScheduleRecurringIfNeeded(request, profileId);
             return newTransaction;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         private static Entities.Transaction BuildTransaction(TransactionDto request, Wallet wallet, int installment, Guid? parentId = null)
