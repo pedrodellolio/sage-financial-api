@@ -28,6 +28,29 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
+        [HttpPut("toggle/{id}")]
+        public async Task<ActionResult<Notification>> Toggle(Guid id)
+        {
+            try
+            {
+                var notificationDb = await notificationService.GetAsync(id, ProfileId);
+                if (notificationDb is null)
+                    return NotFound("Notificação não encontrada.");
+
+                notificationDb.IsEnabled = !notificationDb.IsEnabled;
+                var label = await notificationService.PutAsync(notificationDb);
+                return Ok(label);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return BadRequest("Ocorreu um erro inesperado.");
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult<Notification>> Post(NotificationDto request)
         {

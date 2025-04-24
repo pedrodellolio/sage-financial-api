@@ -22,16 +22,15 @@ namespace SageFinancialAPI.Services
         {
             return await context.Labels
                 .Where(label =>
-                    !label.BudgetGoals.Any(budgetGoal =>
-                        budgetGoal.Budget.Month == month &&
-                        budgetGoal.Budget.Year == year &&
-                        budgetGoal.Budget.ProfileId == profileId) ||
-                    label.BudgetGoals.Any(budgetGoal =>
-                        budgetGoal.Budget.Year < year ||
-                        (budgetGoal.Budget.Year == year && budgetGoal.Budget.Month < month)))
+                    label.BudgetGoals.Any(bg => bg.Budget.ProfileId == profileId) &&
+                    !label.BudgetGoals.Any(bg =>
+                        bg.Budget.ProfileId == profileId &&
+                        bg.Budget.Month == month &&
+                        bg.Budget.Year == year))
                 .Select(label => label.ToDto())
                 .ToListAsync();
         }
+
 
 
         public async Task<ICollection<LabelDto>> GetAllAsync(Guid profileId)

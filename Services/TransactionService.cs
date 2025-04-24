@@ -205,11 +205,16 @@ namespace SageFinancialAPI.Services
                 return;
 
             var tipo = _originalTransaction.Type == TransactionType.EXPENSE ? "pagamento" : "recebimento";
-            // Schedule notifications to alert the user when a goal's limit is reached
-            await notificationService.SendNotificationByProfileAsync(
-                profileId,
-                $"Seu próximo {tipo} está próximo!",
-                $" Fique atento! O {tipo}: {originalTransaction.Title.Trim()} está agendado para amanhã");
+
+            var notification = await notificationService.GetAsync(originalTransaction.Id, profileId);
+            if (notification is not null && notification.IsEnabled)
+            {
+                // Schedule notifications to alert the user when a goal's limit is reached
+                await notificationService.SendNotificationByProfileAsync(
+                    profileId,
+                    $"Seu próximo {tipo} está próximo!",
+                    $" Fique atento! O {tipo}: {originalTransaction.Title.Trim()} está agendado para amanhã");
+            }
         }
 
         #endregion
@@ -357,14 +362,14 @@ namespace SageFinancialAPI.Services
             try
             {
 
-            Wallet wallet = await walletService.CreateOrUpdateAsync(request, profileId);
-            Entities.Transaction newTransaction = BuildTransaction(request, wallet, installment, parentId);
-            context.Transactions.Add(newTransaction);
-            request.ParentTransactionId = newTransaction.ParentTransactionId;
-            request.Id = newTransaction.Id;
-            if (scheduleRecurrence)
-                ScheduleRecurringIfNeeded(request, profileId);
-            return newTransaction;
+                Wallet wallet = await walletService.CreateOrUpdateAsync(request, profileId);
+                Entities.Transaction newTransaction = BuildTransaction(request, wallet, installment, parentId);
+                context.Transactions.Add(newTransaction);
+                request.ParentTransactionId = newTransaction.ParentTransactionId;
+                request.Id = newTransaction.Id;
+                if (scheduleRecurrence)
+                    ScheduleRecurringIfNeeded(request, profileId);
+                return newTransaction;
             }
             catch (Exception ex)
             {

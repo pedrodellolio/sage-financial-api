@@ -11,7 +11,7 @@ using SageFinancialAPI.Models;
 
 namespace SageFinancialAPI.Services
 {
-    public class AuthService(AppDbContext context) : IAuthService
+    public class AuthService(AppDbContext context, IProfileService profileService) : IAuthService
     {
         // public async Task<TokenResponseDto?> LoginAsync(UserDto request)
         // {
@@ -41,16 +41,35 @@ namespace SageFinancialAPI.Services
             if (await context.Users.AnyAsync(u => u.Email == request.Email))
                 return null;
 
-            var user = new User
-            {
-                Id = request.UserId,
-                Email = request.Email
-            };
+            using var transaction = await context.Database.BeginTransactionAsync();
 
-            context.Users.Add(user);
-            await context.SaveChangesAsync();
-            return user;
+            try
+            {
+                var user = new User
+                {
+                    Id = request.UserId,
+                    Email = request.Email
+                };
+
+                context.Users.Add(user);
+                await context.SaveChangesAsync();
+
+                await profileService.PostAsync(new ProfileDto
+                {
+                    Title = "PESSOAL",
+                    IsDefault = true
+                }, user.Id);
+
+                await transaction.CommitAsync();
+                return user;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
+
 
         public async Task<User?> GetAsync(Guid userId)
         {

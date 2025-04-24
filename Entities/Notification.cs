@@ -4,6 +4,7 @@ namespace SageFinancialAPI.Entities
 {
     public class Notification : BaseEntity
     {
+        public bool IsEnabled { get; set; }
         public DateTimeOffset TriggerDate { get; set; }
         public Guid TransactionId { get; set; }
         public Transaction Transaction { get; set; } = default!;

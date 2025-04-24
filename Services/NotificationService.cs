@@ -1,5 +1,6 @@
 using Expo.Server.Client;
 using Expo.Server.Models;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using SageFinancialAPI.Data;
 using SageFinancialAPI.Entities;
@@ -12,6 +13,11 @@ namespace SageFinancialAPI.Services
     {
         private readonly PushApiClient _expoClient = new();
 
+        public async Task<Notification?> GetAsync(Guid notificationId)
+        {
+            return await context.Notifications.FindAsync(notificationId);
+        }
+
         public async Task<Notification?> GetAsync(Guid transactionId, Guid profileId)
         {
             return await context.Notifications.Include(x => x.Transaction).FirstOrDefaultAsync(p => p.ProfileId == profileId && p.TransactionId == transactionId);
@@ -20,6 +26,13 @@ namespace SageFinancialAPI.Services
         public async Task<ICollection<Notification>> GetAllAsync(Guid profileId)
         {
             return await context.Notifications.Include(x => x.Transaction).Where(p => p.ProfileId == profileId).ToListAsync();
+        }
+
+        public async Task<Notification> PutAsync(Notification notification)
+        {
+            context.Notifications.Update(notification);
+            await context.SaveChangesAsync();
+            return notification;
         }
 
         public async Task<Notification> PostAsync(NotificationDto request, Guid profileId)
@@ -37,6 +50,7 @@ namespace SageFinancialAPI.Services
 
         public async Task<bool> DeleteAsync(Notification notification)
         {
+            RemoveScheduledJobs(notification.TransactionId);
             context.Notifications.Remove(notification);
             var result = await context.SaveChangesAsync();
             return result > 0;
@@ -88,10 +102,18 @@ namespace SageFinancialAPI.Services
                 PushTo = [user.PushNotificationsToken],
                 PushTitle = title,
                 PushBody = message,
-                PushData = new { notificationId = Guid.NewGuid().ToString() },
             };
 
             await _expoClient.PushSendAsync(pushTicketRequest);
+        }
+
+        private static void RemoveScheduledJobs(Guid transactionId)
+        {
+            string transactionJobId = $"RecurringTransaction-{transactionId}";
+            string notificationJobId = $"Notification-{transactionId}";
+
+            RecurringJob.RemoveIfExists(transactionJobId);
+            RecurringJob.RemoveIfExists(notificationJobId);
         }
     }
 }

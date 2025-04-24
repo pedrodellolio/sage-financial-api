@@ -13,8 +13,10 @@ namespace SageFinancialAPI.Services
 {
     public interface INotificationService
     {
+        Task<Notification?> GetAsync(Guid notificationId);
         Task<Notification?> GetAsync(Guid transactionId, Guid profileId);
         Task<ICollection<Notification>> GetAllAsync(Guid profileId);
+        Task<Notification> PutAsync(Notification notification);
         Task<Notification> PostAsync(NotificationDto request, Guid profileId);
         Task<bool> DeleteAsync(Notification notification);
         Task SendNotificationAsync(string expoPushToken, string title, string message);

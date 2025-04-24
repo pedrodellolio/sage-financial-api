@@ -50,7 +50,8 @@ namespace SageFinancialAPI.Services
             var newProfile = new Profile
             {
                 Title = request.Title,
-                UserId = userId
+                UserId = userId,
+                IsDefault = request.IsDefault
             };
 
             context.Profiles.Add(newProfile);
