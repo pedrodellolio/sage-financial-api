@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using SageFinancialAPI.Data;
 using SageFinancialAPI.Entities;
 using SageFinancialAPI.Extensions;
+using SageFinancialAPI.Generators;
 using SageFinancialAPI.Models;
 
 namespace SageFinancialAPI.Services
@@ -46,7 +47,7 @@ namespace SageFinancialAPI.Services
             var newLabel = new Label
             {
                 Title = request.Title,
-                ColorHex = "#FFF",
+                ColorHex = ColorGenerator.GenerateDarkModeColor(),
                 ProfileId = profileId
             };
 

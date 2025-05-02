@@ -96,7 +96,7 @@ namespace SageFinancialAPI.Controllers
 
                 budgetGoalDb.Value = request.Value;
                 budgetGoalDb.Type = request.Type;
-                budgetGoalDb.LabelId = request.Label.Id;
+                budgetGoalDb.LabelId = request.LabelId;
 
                 var budgetGoal = await budgetGoalService.PutAsync(budgetGoalDb);
                 return Ok(budgetGoal);

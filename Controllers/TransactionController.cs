@@ -51,11 +51,11 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpGet("get-by-period")]
-        public async Task<ActionResult<ICollection<Transaction>>> GetByPeriod(DateTime start, DateTime end, TransactionType? type)
+        public async Task<ActionResult<ICollection<Transaction>>> GetByPeriod(DateTime start, DateTime end, TransactionType? type, bool onlyRecurrentOrInstallment = false)
         {
             try
             {
-                var result = await transactionService.GetByPeriodAsync(start, end, ProfileId, type);
+                var result = await transactionService.GetByPeriodAsync(start, end, onlyRecurrentOrInstallment, ProfileId, type);
                 return Ok(result);
             }
             catch (ApplicationException ex)

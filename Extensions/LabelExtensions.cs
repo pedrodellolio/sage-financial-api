@@ -11,6 +11,7 @@ namespace SageFinancialAPI.Extensions
             {
                 Id = label.Id,
                 Title = label.Title,
+                ColorHex = label.ColorHex
             };
         }
     }

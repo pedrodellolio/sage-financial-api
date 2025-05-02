@@ -49,7 +49,7 @@ namespace SageFinancialAPI.Services
             {
                 Value = request.Value,
                 Type = request.Type,
-                LabelId = request.Label.Id,
+                LabelId = request.LabelId,
                 BudgetId = budget.Id
             };
 

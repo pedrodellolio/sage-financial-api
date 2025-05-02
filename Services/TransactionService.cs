@@ -81,11 +81,11 @@ namespace SageFinancialAPI.Services
                 if (filters.OnlyRecurrent)
                     query = query.Where(t => t.Frequency != null);
 
-                if (filters.MinValue.HasValue)
+                if (filters.MinValue.HasValue && filters.MinValue.Value > 0)
                     query = query.Where(t => t.ValueBrl >= filters.MinValue);
 
-                if (filters.MaxValue.HasValue)
-                    query = query.Where(t => t.ValueBrl <= filters.MinValue);
+                if (filters.MaxValue.HasValue && filters.MaxValue.Value > 0)
+                    query = query.Where(t => t.ValueBrl <= filters.MaxValue);
 
                 //if (filters.LabelIds.Count != 0)
                 //    query = query.Where(t => t.LabelId.HasValue && filters.LabelIds.Contains(t.LabelId.Value));
@@ -96,7 +96,7 @@ namespace SageFinancialAPI.Services
                     .ToListAsync();
         }
 
-        public async Task<ICollection<Entities.Transaction>> GetByPeriodAsync(DateTime start, DateTime end, Guid profileId, TransactionType? type = null)
+        public async Task<ICollection<Entities.Transaction>> GetByPeriodAsync(DateTime start, DateTime end, bool onlyRecurrentOrInstallment, Guid profileId, TransactionType? type = null)
         {
             return await context.Transactions
                 .Include(t => t.Label)
@@ -104,6 +104,7 @@ namespace SageFinancialAPI.Services
                     t.OccurredAt > start &&
                     t.OccurredAt < end &&
                     t.Wallet.ProfileId == profileId &&
+                    (!onlyRecurrentOrInstallment || (t.Frequency != null || t.TotalInstallments > 0)) &&
                     (type == null || t.Type == type))
                 .OrderByDescending(t => t.OccurredAt)
                 .ToListAsync();
@@ -160,13 +161,15 @@ namespace SageFinancialAPI.Services
             try
             {
                 var profileId = oldTransaction.Wallet.ProfileId;
+
+                // Recalculate transactions only if it has installments
+                if (newTransaction.TotalInstallments > 0)
+                    newTransaction.ValueBrl = GetTransactionOriginalTotalValue(oldTransaction); // Adjust new transaction’s value based on the original total.
+
                 await DeleteAsync(oldTransaction); // Delete original transaction and its installments
-
-                // Adjust new transaction’s value based on the original total.
-                newTransaction.ValueBrl = GetTransactionOriginalTotalValue(oldTransaction);
                 await PostAsync(newTransaction, profileId);
-                await context.SaveChangesAsync();
 
+                await context.SaveChangesAsync();
                 transactionScope.Complete();
                 return true;
             }
