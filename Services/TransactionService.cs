@@ -7,6 +7,7 @@ using SageFinancialAPI.Models;
 using System;
 using System.Transactions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SageFinancialAPI.Services
 {
@@ -82,11 +83,13 @@ namespace SageFinancialAPI.Services
                     query = query.Where(t => t.Frequency != null);
 
                 if (filters.MinValue.HasValue && filters.MinValue.Value > 0)
-                    query = query.Where(t => t.ValueBrl >= filters.MinValue);
+                    query = query.Where(t => t.ValueBrl >= filters.MinValue.Value);
 
                 if (filters.MaxValue.HasValue && filters.MaxValue.Value > 0)
-                    query = query.Where(t => t.ValueBrl <= filters.MaxValue);
+                    query = query.Where(t => t.ValueBrl <= filters.MaxValue.Value);
 
+                if (filters.Type.HasValue)
+                    query = query.Where(t => t.Type == filters.Type.Value);
                 //if (filters.LabelIds.Count != 0)
                 //    query = query.Where(t => t.LabelId.HasValue && filters.LabelIds.Contains(t.LabelId.Value));
             }
@@ -101,8 +104,8 @@ namespace SageFinancialAPI.Services
             return await context.Transactions
                 .Include(t => t.Label)
                 .Where(t =>
-                    t.OccurredAt > start &&
-                    t.OccurredAt < end &&
+                    t.OccurredAt >= start &&
+                    t.OccurredAt <= end &&
                     t.Wallet.ProfileId == profileId &&
                     (!onlyRecurrentOrInstallment || (t.Frequency != null || t.TotalInstallments > 0)) &&
                     (type == null || t.Type == type))
@@ -233,6 +236,8 @@ namespace SageFinancialAPI.Services
 
                 context.Transactions.RemoveRange(installments);
                 context.Transactions.Remove(transaction);
+                if (transaction.Notification is not null)
+                    context.Notifications.Remove(transaction.Notification);
                 await context.SaveChangesAsync();
 
                 // After deletion, update the wallets for all affected transactions.
@@ -367,6 +372,29 @@ namespace SageFinancialAPI.Services
 
                 Wallet wallet = await walletService.CreateOrUpdateAsync(request, profileId);
                 Entities.Transaction newTransaction = BuildTransaction(request, wallet, installment, parentId);
+
+                // Notify user of goals reaching its limit
+                if (newTransaction.LabelId is not null)
+                {
+                    var budgetGoal = await context.BudgetGoals.FirstOrDefaultAsync(bg => bg.LabelId == newTransaction.LabelId);
+                    if (budgetGoal is not null)
+                    {
+                        var transactions = await GetAllByMonthAndYearLabelAsync(newTransaction.OccurredAt.Month, newTransaction.OccurredAt.Year, newTransaction.LabelId.Value, profileId, TransactionType.EXPENSE);
+                        var totalLabelExpenses = transactions.Sum(t => t.ValueBrl) + request.ValueBrl;
+                        var totalMonthExpenses = wallet.ExpensesBrl;
+
+                        decimal limit = 0;
+                        if (budgetGoal.Type == BudgetGoalType.PERCENTAGE)
+                            limit = (budgetGoal.Value / 100) * totalMonthExpenses;
+                        else
+                            limit = budgetGoal.Value;
+
+                        // if the label’s total expenses reach 80% of the goal limit.
+                        var limitThreshold = limit * 0.8M;
+                        if (totalLabelExpenses >= limitThreshold)
+                            RecurringJob.TriggerJob($"Notification-{budgetGoal.Id}");
+                    }
+                }
                 context.Transactions.Add(newTransaction);
                 request.ParentTransactionId = newTransaction.ParentTransactionId;
                 request.Id = newTransaction.Id;

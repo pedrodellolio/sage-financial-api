@@ -9,6 +9,7 @@ namespace SageFinancialAPI.Models
         public bool OnlyRecurrent { get; set; }
         public decimal? MinValue { get; set; }
         public decimal? MaxValue { get; set; }
+        public TransactionType? Type { get; set; }
         //public List<Guid> LabelIds { get; set; } = new();
     }
 }

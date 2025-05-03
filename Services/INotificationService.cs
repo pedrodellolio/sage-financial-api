@@ -15,6 +15,7 @@ namespace SageFinancialAPI.Services
     {
         Task<Notification?> GetAsync(Guid notificationId);
         Task<Notification?> GetAsync(Guid transactionId, Guid profileId);
+        Task<Notification?> GetByBudgetGoalAsync(Guid budgetGoalId, Guid profileId);
         Task<ICollection<Notification>> GetAllAsync(Guid profileId);
         Task<Notification> PutAsync(Notification notification);
         Task<Notification> PostAsync(NotificationDto request, Guid profileId);

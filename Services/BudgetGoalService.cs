@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Hangfire;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Validations;
 using Newtonsoft.Json;
 using SageFinancialAPI.Data;
 using SageFinancialAPI.Entities;
@@ -10,7 +12,7 @@ using SageFinancialAPI.Models;
 
 namespace SageFinancialAPI.Services
 {
-    public class BudgetGoalService(AppDbContext context, IBudgetService budgetService) : IBudgetGoalService
+    public class BudgetGoalService(AppDbContext context, IBudgetService budgetService, INotificationService notificationService) : IBudgetGoalService
     {
         public async Task<BudgetGoal?> GetAsync(Guid budgetGoalId)
         {
@@ -54,6 +56,18 @@ namespace SageFinancialAPI.Services
             };
 
             context.BudgetGoals.Add(newBudgetGoal);
+            context.Notifications.Add(new Notification
+            {
+                BudgetGoal = newBudgetGoal,
+                ProfileId = profileId
+            });
+
+            var label = await context.Labels.FirstOrDefaultAsync(l => l.Id == request.LabelId);
+            if (label is null)
+                throw new ApplicationException("Categoria não encontrada");
+
+            ScheduleGoalLimitNotification(newBudgetGoal.Id, label.Title, profileId);
+
             await context.SaveChangesAsync();
             return newBudgetGoal;
         }
@@ -70,6 +84,36 @@ namespace SageFinancialAPI.Services
             context.BudgetGoals.Remove(budgetGoal);
             var result = await context.SaveChangesAsync();
             return result > 0;
+        }
+
+        [AutomaticRetry(Attempts = 3)]
+        public async Task ProcessGoalLimitNotification(Guid budgetGoalId, string labelTitle, Guid profileId)
+        {
+            var notification = await notificationService.GetByBudgetGoalAsync(budgetGoalId, profileId);
+            if (notification is not null && notification.IsEnabled)
+            {
+                // Schedule notifications to alert the user when a goal's limit is reached
+                await notificationService.SendNotificationByProfileAsync(
+                    profileId,
+                    $"Atenção!",
+                    $"Fique atento! Você está quase no limite de gastos para {labelTitle}.");
+            }
+        }
+
+        private void ScheduleGoalLimitNotification(Guid budgetGoalId, string labelTitle, Guid profileId)
+        {
+            try
+            {
+                string jobId = $"Notification-{budgetGoalId}";
+                RecurringJob.AddOrUpdate(
+                     jobId,
+                     () => ProcessGoalLimitNotification(budgetGoalId, labelTitle, profileId),
+                     Cron.Never);
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }
