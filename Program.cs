@@ -9,6 +9,11 @@ using SageFinancialAPI.Data;
 using SageFinancialAPI.Services;
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 builder.Services.AddHangfire(config =>
     config.UseSimpleAssemblyNameTypeSerializer()
           .UseRecommendedSerializerSettings()

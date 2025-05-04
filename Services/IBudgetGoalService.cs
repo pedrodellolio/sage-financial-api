@@ -10,6 +10,6 @@ namespace SageFinancialAPI.Services
         Task<ICollection<BudgetGoal>> GetAllAsync(Guid budgetId);
         Task<BudgetGoal> PostAsync(BudgetGoalDto request, Guid profileId);
         Task<BudgetGoal> PutAsync(BudgetGoal budgetGoal);
-        Task<bool> DeleteAsync(BudgetGoal BudgetGoal);
+        Task<bool> DeleteAsync(BudgetGoal budgetGoal, Guid profileId);
     }
 }

@@ -29,11 +29,17 @@ namespace SageFinancialAPI.Controllers
         }
 
         [HttpPut("toggle/{id}")]
-        public async Task<ActionResult<Notification>> Toggle(Guid id)
+        public async Task<ActionResult<Notification>> Toggle(NotificationToggleDto notificationToggle)
         {
             try
             {
-                var notificationDb = await notificationService.GetAsync(id, ProfileId);
+                Notification? notificationDb = null;
+                //NotificationType type = NotificationType.TRANSACTION;
+                if (notificationToggle.Type == NotificationType.TRANSACTION)
+                    notificationDb = await notificationService.GetAsync(notificationToggle.Id, ProfileId);
+                else
+                    notificationDb = await notificationService.GetByBudgetGoalAsync(notificationToggle.Id, ProfileId);
+
                 if (notificationDb is null)
                     return NotFound("Notificação não encontrada.");
 

@@ -121,7 +121,7 @@ namespace SageFinancialAPI.Controllers
                 if (budgetGoalDb is null)
                     return NotFound("BudgetGoal não encontrada.");
 
-                var deleted = await budgetGoalService.DeleteAsync(budgetGoalDb);
+                var deleted = await budgetGoalService.DeleteAsync(budgetGoalDb, ProfileId);
                 return Ok(deleted);
             }
             catch (ApplicationException ex)

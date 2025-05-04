@@ -79,8 +79,12 @@ namespace SageFinancialAPI.Services
             return budgetGoal;
         }
 
-        public async Task<bool> DeleteAsync(BudgetGoal budgetGoal)
+        public async Task<bool> DeleteAsync(BudgetGoal budgetGoal, Guid profileId)
         {
+            var notification = await notificationService.GetByBudgetGoalAsync(budgetGoal.Id, profileId);
+            if (notification is not null)
+                await notificationService.DeleteAsync(notification);
+
             context.BudgetGoals.Remove(budgetGoal);
             var result = await context.SaveChangesAsync();
             return result > 0;

@@ -13,4 +13,10 @@ namespace SageFinancialAPI.Entities
         public Guid ProfileId { get; set; }
         public Profile Profile { get; set; } = null!;
     }
+
+    public enum NotificationType
+    {
+        TRANSACTION,
+        GOAL,
+    }
 }

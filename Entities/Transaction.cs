@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace SageFinancialAPI.Entities
 {
     public class Transaction : BaseEntity
