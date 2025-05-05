@@ -3,9 +3,6 @@ using SageFinancialAPI.Entities;
 using Microsoft.AspNetCore.Authorization;
 using SageFinancialAPI.Models;
 using SageFinancialAPI.Services;
-using System.Security.Claims;
-using Newtonsoft.Json;
-using SageFinancialAPI.Extensions;
 
 namespace SageFinancialAPI.Controllers
 {

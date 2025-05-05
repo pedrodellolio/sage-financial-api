@@ -29,7 +29,25 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
-         [HttpGet("default")]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Profile?>> Get(Guid id)
+        {
+            try
+            {
+                var result = await profileService.GetAsync(id);
+                return Ok(result);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch
+            {
+                return BadRequest("Ocorreu um erro inesperado.");
+            }
+        }
+
+        [HttpGet("default")]
         public async Task<ActionResult<Profile?>> GetDefault()
         {
             try
@@ -128,12 +146,12 @@ namespace SageFinancialAPI.Controllers
             }
         }
 
-        [HttpDelete("{profileId}")]
-        public async Task<ActionResult<bool>> Delete()
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<bool>> Delete(Guid id)
         {
             try
             {
-                var profileDb = await profileService.GetAsync(ProfileId);
+                var profileDb = await profileService.GetAsync(id);
                 if (profileDb is null)
                     return NotFound("Profile não encontrada.");
 

@@ -158,6 +158,19 @@ namespace SageFinancialAPI.Services
             });
         }
 
+        public async Task<bool> PostManyAsync(List<TransactionDto> request, Guid profileId)
+        {
+            return await ExecuteInOptionalScopeAsync(async () =>
+            {
+                foreach(var transaction in request)
+                {
+                    await ProcessSingleTransactionAsync(transaction, profileId, 1);
+                }
+
+                await context.SaveChangesAsync();
+            });
+        }
+
         public async Task<bool> PutAsync(TransactionDto newTransaction, Entities.Transaction oldTransaction)
         {
             using var transactionScope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);

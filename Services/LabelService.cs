@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 using SageFinancialAPI.Data;
 using SageFinancialAPI.Entities;
 using SageFinancialAPI.Extensions;
@@ -16,7 +11,12 @@ namespace SageFinancialAPI.Services
     {
         public async Task<Label?> GetAsync(Guid labelId)
         {
-            return await context.Labels.FindAsync(labelId);
+            return await context.Labels.FirstOrDefaultAsync(l => l.Id == labelId && l.IsActive);
+        }
+
+        public async Task<Label?> GetByTitleAsync(string title)
+        {
+            return await context.Labels.FirstOrDefaultAsync(l => l.Title == title.ToUpper() && l.IsActive);
         }
 
         public async Task<ICollection<LabelDto>> GetAllNotInBudgetGoalAsync(int month, int year, Guid profileId)
@@ -24,6 +24,7 @@ namespace SageFinancialAPI.Services
             return await context.Labels
                 .Where(label =>
                     label.ProfileId == profileId &&
+                    label.IsActive &&
                     !label.BudgetGoals.Any(bg =>
                         bg.Budget.Month == month &&
                         bg.Budget.Year == year &&
@@ -64,7 +65,12 @@ namespace SageFinancialAPI.Services
 
         public async Task<bool> DeleteAsync(Label label)
         {
-            context.Labels.Remove(label);
+            if (label.IsDefault)
+                throw new ApplicationException("Não é possível desativar categorias padrões.");
+
+            label.IsActive = false;
+            label.IsActive = false;
+            context.Labels.Update(label);
             var result = await context.SaveChangesAsync();
             return result > 0;
         }

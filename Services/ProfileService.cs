@@ -68,7 +68,10 @@ namespace SageFinancialAPI.Services
 
         public async Task<bool> DeleteAsync(Profile profile)
         {
-            context.Profiles.Remove(profile);
+            if (profile.IsDefault)
+                throw new ApplicationException("Não é possível desativar perfis padrões.");
+            profile.IsActive = false;
+            context.Profiles.Update(profile);
             var result = await context.SaveChangesAsync();
             return result > 0;
         }

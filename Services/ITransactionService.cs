@@ -15,6 +15,7 @@ namespace SageFinancialAPI.Services
         Task<ICollection<Entities.Transaction>> GetByPeriodAsync(DateTime start, DateTime end, bool onlyRecurrentOrInstallment, Guid profileId, TransactionType? type = null);
         Task<bool> PostAsync(TransactionDto request, Guid profileId, bool scheduleRecurrence = true);
         Task<bool> PostManyAsync(TransactionDto request, Guid profileId);
+        Task<bool> PostManyAsync(List<TransactionDto> request, Guid profileId);
         Task<bool> PutAsync(TransactionDto newTransaction, Transaction oldTransaction);
         Task<bool> DeleteAsync(Transaction Transaction);
     }

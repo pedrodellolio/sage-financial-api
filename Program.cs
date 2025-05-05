@@ -68,6 +68,7 @@ builder.Services.AddScoped<ILabelService, LabelService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<IBudgetGoalService, BudgetGoalService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IFileService, FileService>();
 
 var app = builder.Build();
 
