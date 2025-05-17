@@ -119,19 +119,27 @@ namespace SageFinancialAPI.Services
 
         public async Task<bool> PostAsync(TransactionDto request, Guid profileId, bool scheduleRecurrence = true)
         {
-            return await ExecuteInOptionalScopeAsync(async () =>
+            try
             {
-                if (request.TotalInstallments > 0)
-                {
-                    await PostManyAsync(request, profileId);
-                }
-                else
-                {
-                    await ProcessSingleTransactionAsync(request, profileId, installment: 1, scheduleRecurrence: scheduleRecurrence);
-                    await context.SaveChangesAsync();
-                }
 
-            });
+                return await ExecuteInOptionalScopeAsync(async () =>
+                {
+                    if (request.TotalInstallments > 0)
+                    {
+                        await PostManyAsync(request, profileId);
+                    }
+                    else
+                    {
+                        await ProcessSingleTransactionAsync(request, profileId, installment: 1, scheduleRecurrence: scheduleRecurrence);
+                        await context.SaveChangesAsync();
+                    }
+
+                });
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public async Task<bool> PostManyAsync(TransactionDto request, Guid profileId)
@@ -162,7 +170,7 @@ namespace SageFinancialAPI.Services
         {
             return await ExecuteInOptionalScopeAsync(async () =>
             {
-                foreach(var transaction in request)
+                foreach (var transaction in request)
                 {
                     await ProcessSingleTransactionAsync(transaction, profileId, 1);
                 }
@@ -213,7 +221,7 @@ namespace SageFinancialAPI.Services
                 ParentTransactionId = originalTransaction.Id
             };
 
-            await PostAsync(newTransaction, originalTransaction.Wallet.ProfileId, scheduleRecurrence: newTransaction.ParentTransactionId != null);
+            await PostAsync(newTransaction, originalTransaction.Wallet.ProfileId, scheduleRecurrence: false);
         }
 
         [AutomaticRetry(Attempts = 3)]
@@ -233,6 +241,10 @@ namespace SageFinancialAPI.Services
                     profileId,
                     $"Seu próximo {tipo} está próximo!",
                     $" Fique atento! O {tipo}: {originalTransaction.Title.Trim()} está agendado para amanhã");
+
+                notification.TriggerDate = notification.TriggerDate.AddMonths(1);
+                context.Notifications.Update(notification);
+                await context.SaveChangesAsync();
             }
         }
 
@@ -242,24 +254,36 @@ namespace SageFinancialAPI.Services
 
         public async Task<bool> DeleteAsync(Entities.Transaction transaction)
         {
-            return await ExecuteInOptionalScopeAsync(async () =>
+            try
             {
-                var installments = await GetAllInstallmentsAsync(transaction.Id);
-                RemoveScheduledJobs(transaction.Id);
 
-                context.Transactions.RemoveRange(installments);
-                context.Transactions.Remove(transaction);
-                if (transaction.Notification is not null)
-                    context.Notifications.Remove(transaction.Notification);
-                await context.SaveChangesAsync();
-
-                // After deletion, update the wallets for all affected transactions.
-                var allTransactions = new List<Entities.Transaction>(installments) { transaction };
-                foreach (var t in allTransactions)
+                return await ExecuteInOptionalScopeAsync(async () =>
                 {
-                    await walletService.PatchAsync(t.Wallet);
-                }
-            });
+                    var installments = await GetAllInstallmentsAsync(transaction.Id);
+                    RemoveScheduledJobs(transaction.Id);
+
+                    if (installments.Any())
+                        context.Transactions.RemoveRange(installments);
+
+                    context.Transactions.Remove(transaction);
+
+                    var notification = await notificationService.GetAsync(transaction.Id, transaction.Wallet.ProfileId);
+                    if (notification is not null)
+                        context.Notifications.Remove(notification);
+
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+                    // After deletion, update the wallets for all affected transactions.
+                    var allTransactions = new List<Entities.Transaction>(installments) { transaction };
+                    foreach (var t in allTransactions)
+                    {
+                        await walletService.PatchAsync(t.Wallet);
+                    }
+                });
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         #endregion
@@ -324,7 +348,7 @@ namespace SageFinancialAPI.Services
                         cronExpression = $"0 0 {notificationDay} * *";
 
                         // Calcular a data de notificação para o mês da transação
-                        notificationDate = new DateTimeOffset(transaction.OccurredAt.Year, transaction.OccurredAt.Month, notificationDay, 0, 0, 0, TimeSpan.Zero);
+                        notificationDate = new DateTimeOffset(transaction.OccurredAt.Year, transaction.OccurredAt.Month + 1, notificationDay, 0, 0, 0, TimeSpan.Zero);
                         break;
 
                     case RecurrenceType.YEARLY:
@@ -465,7 +489,6 @@ namespace SageFinancialAPI.Services
             return frequency switch
             {
                 RecurrenceType.WEEKLY => occurredAt.AddDays(7 * installment),
-                RecurrenceType.BIWEEKLY => occurredAt.AddDays(14 * installment),
                 RecurrenceType.MONTHLY => occurredAt.AddMonths(installment),
                 RecurrenceType.YEARLY => occurredAt.AddYears(installment),
                 _ => throw new ArgumentOutOfRangeException(nameof(frequency), frequency, "Unsupported interval"),
@@ -488,7 +511,7 @@ namespace SageFinancialAPI.Services
                     scope.Complete();
                     return true;
                 }
-                catch
+                catch (Exception ex)
                 {
                     return false;
                 }

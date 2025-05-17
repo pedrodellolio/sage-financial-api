@@ -37,7 +37,6 @@ namespace SageFinancialAPI.Entities
     public enum RecurrenceType
     {
         WEEKLY,
-        BIWEEKLY,
         MONTHLY,
         YEARLY
     }

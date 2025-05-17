@@ -11,6 +11,13 @@ namespace SageFinancialAPI.Controllers
     [Authorize]
     public class BudgetController(IBudgetService budgetService) : BaseController
     {
+        [HttpGet("test")]
+        [AllowAnonymous]
+        public async Task<ActionResult> Test()
+        {
+            return Ok("Success");
+        }
+
         [HttpGet("{budgetId}")]
         public async Task<ActionResult<Budget?>> Get(Guid budgetId)
         {

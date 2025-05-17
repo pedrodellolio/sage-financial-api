@@ -18,7 +18,7 @@ namespace SageFinancialAPI.Services
 
         public async Task<Budget?> GetByMonthAndYearAsync(int month, int year, Guid profileId)
         {
-            return await context.Budgets.FirstOrDefaultAsync(b => b.Month == month && b.Year == year);
+            return await context.Budgets.FirstOrDefaultAsync(b => b.Month == month && b.Year == year && b.ProfileId == profileId);
         }
 
         public async Task<ICollection<Budget>> GetAllAsync(Guid profileId)

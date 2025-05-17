@@ -59,7 +59,7 @@ namespace SageFinancialAPI.Services
                     int index = map.Key;
                     string propertyName = map.Value;
 
-                    if (index >= segments.Length) continue;
+                    if (index > segments.Length) continue;
 
                     var property = typeof(TransactionDto).GetProperty(propertyName);
                     if (property == null) continue;
